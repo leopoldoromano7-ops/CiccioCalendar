@@ -1,407 +1,356 @@
 <!DOCTYPE html>
-
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Day Detail - ShiftGuardian</title>
-<script type='text/javascript' nonce='eh95sqo31CkXusQ9ON9AAg==' src='https://contribution.usercontent.google.com/z7lyMHkJ_eN_MiW0PBvGwJFN3XyBvwR2K76-tEkkl3wUIcsbWClbUL6aJJkQjzPG2L5D7tUNxLFyo-uZGBTTtOzG_qGuiTiIR8gW1cfA1LNaNgDSfjqO0WJztCz0OoBDj2AIrFd40YYex9_QZZzr7KtRa1c3bmgeflhWlFt_pZ6lRVoOIHp3a2caIFrEK5IgXmoYsF31xUVYIXsFflScD9qVHW-GyCxmTqZ6cS19LEf2dDYx7PcoeIL0mvB7Th3bWTPGukO3gQxZ_JMQ9mvaHGHHyaF4_6CLGq4SDzRZTQHRBz_0bICL661niytc3El2ty1epNTlB8Dtq4kVtUDIZexBeISalVd8FXH9xIDzD-Zxeih9ltyvhpoy33-rNzK6LNnQneRE0L1QSNkH9hhmcDsbs4mVx-hf6xJ3eThQUnW_SkhQXrZc9ZZsuLRW3zflWDtLQ1bzSpyEz9CxPtRrZDUkLDXg38q23-R2fcRjNX3-oQ-Qfnm3PpqtrgQmqRGbeWtlksIHWCdi5-m9a7VE2xmzVMlAxeqhfkE29TQPNLZ0tUtmkCESmXa0cmjbKCKaU58wALILVLf1SmYc89q4vN7C66s42LyXSL3OMVj2Noq94MYy9iJf74f6JtCLJ3V-rHdaThpjjKCeuZVhatRMaM9xt_2HdA_9VMVCIoRtmDGktkwuTCjsaFQY0r59YrJ3YpjjTXI9QPJMSIxONHOV3Hre864A6pYZmOpkYtPPsBtwmcqzklyh5VpAVfjklItpxnJdA8Dmk3MABgeCEzkVdWqySDA__WspCgEIwQ'></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "tertiary": "#2b2621",
-                        "secondary": "#6b5c4c",
-                        "on-secondary-fixed-variant": "#524436",
-                        "error-container": "#ffdad6",
-                        "tertiary-container": "#413c36",
-                        "on-tertiary-fixed": "#1f1b16",
-                        "inverse-surface": "#362f2a",
-                        "outline-variant": "#ccc5bd",
-                        "background": "#fff8f5",
-                        "secondary-fixed-dim": "#d7c3b0",
-                        "on-surface": "#201b15",
-                        "on-secondary-container": "#716252",
-                        "on-primary-fixed": "#1d1b1a",
-                        "surface": "#fff8f5",
-                        "secondary-container": "#f4dfcb",
-                        "on-background": "#201b15",
-                        "surface-bright": "#fff8f5",
-                        "primary-fixed": "#e6e1de",
-                        "on-surface-variant": "#4a4640",
-                        "tertiary-fixed-dim": "#cec5bc",
-                        "on-error-container": "#93000a",
-                        "surface-container-lowest": "#ffffff",
-                        "on-tertiary-container": "#aea69e",
-                        "on-tertiary": "#ffffff",
-                        "on-secondary": "#ffffff",
-                        "surface-container": "#f8ece3",
-                        "on-primary-container": "#aaa6a3",
-                        "error": "#ba1a1a",
-                        "tertiary-fixed": "#ebe1d8",
-                        "primary-fixed-dim": "#cac6c3",
-                        "surface-container-low": "#fef1e9",
-                        "secondary-fixed": "#f4dfcb",
-                        "on-tertiary-fixed-variant": "#4c463f",
-                        "on-primary-fixed-variant": "#494644",
-                        "primary": "#282625",
-                        "surface-variant": "#ece0d8",
-                        "inverse-primary": "#cac6c3",
-                        "on-primary": "#ffffff",
-                        "surface-container-highest": "#ece0d8",
-                        "outline": "#7c766f",
-                        "on-error": "#ffffff",
-                        "inverse-on-surface": "#fbeee6",
-                        "surface-container-high": "#f2e6dd",
-                        "on-secondary-fixed": "#241a0e",
-                        "surface-tint": "#605e5c",
-                        "surface-dim": "#e4d8cf",
-                        "primary-container": "#3e3c3a"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "lg": "40px",
-                        "margin-mobile": "16px",
-                        "xs": "4px",
-                        "xl": "64px",
-                        "base": "8px",
-                        "sm": "12px",
-                        "margin-desktop": "48px",
-                        "md": "24px",
-                        "gutter": "24px"
-                    },
-                    "fontFamily": {
-                        "headline-lg-mobile": ["Hanken Grotesk"],
-                        "label-sm": ["Inter"],
-                        "body-md": ["Inter"],
-                        "body-lg": ["Inter"],
-                        "label-md": ["Inter"],
-                        "headline-md": ["Hanken Grotesk"],
-                        "display-lg": ["Hanken Grotesk"],
-                        "headline-lg": ["Hanken Grotesk"]
-                    },
-                    "fontSize": {
-                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
-                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
-                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
-                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
-                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "500"}],
-                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}]
-                    }
-                },
-            },
-        }
-    </script>
-<style>
-        body { background-color: #fff8f5; }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f8ece3;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #ccc5bd;
-            border-radius: 10px;
-        }
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Day Detail - ShiftGuardian</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        body { background-color: #fff8f5; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8ece3; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc5bd; border-radius: 10px; }
     </style>
 </head>
-<body class="font-body-md text-on-background selection:bg-secondary-container">
-<!-- Top Navigation Bar -->
-<header class="w-full top-0 sticky z-50 bg-surface h-20 transition-all duration-300">
-<div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
-<div class="flex items-center gap-sm">
-<img alt="Logo" class="h-10 w-10 object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ugnA1ZX3CjjjC7jQxmNe_dl9A2oRISf_7HaeBUFmI3PKp7epvAlJsObZeduoY0lDn3zR2lO1NKfe8QXlkD41EbvY5oL_mzF3Hd_-jjpK-el2lXi7GyPgK1fd7l_bk5_IcF3QgsPKh5-QnRCJuvnBTEEA_0_ldedYqrihVFgOI7RFQ_WPiKH7tc099pHmuuZ96q4xgBcyxdKEjBBQm1HJxDIB9v0w1EC6sDkVuXk9oks1V_mhP6Tt1aD6sw"/>
-<span class="font-headline-md text-headline-md font-bold text-primary">ShiftGuardian</span>
-</div>
-<nav class="hidden md:flex items-center gap-lg">
-<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Product</a>
-<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Solutions</a>
-<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Pricing</a>
-<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Resources</a>
-</nav>
-<div class="flex items-center gap-md">
-<button class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">Log In</button>
-<button class="bg-primary text-on-primary px-md py-sm rounded-lg font-label-md text-label-md active:scale-95 duration-200 transition-all">Get Started</button>
-</div>
-</div>
-</header>
-<main class="max-w-7xl mx-auto px-margin-desktop py-xl">
-<!-- Header & Breadcrumb Section -->
-<div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
-<div class="space-y-sm">
-<button class="flex items-center gap-xs text-secondary hover:text-primary transition-all group" onclick="window.history.back()">
-<span class="material-symbols-outlined text-[18px]">arrow_back</span>
-<span class="font-label-md text-label-md">Back to Calendar</span>
-</button>
-<h1 class="font-headline-lg text-headline-lg text-on-surface">Thursday, October 1st, 2026</h1>
-<p class="text-on-surface-variant font-body-md text-body-md">Manage shifts and coverage for this day.</p>
-</div>
-<div class="flex gap-sm">
-<button class="flex items-center gap-sm bg-primary text-on-primary px-md py-sm rounded-lg font-label-md text-label-md shadow-sm active:scale-95 transition-all" onclick="openModal()">
-<span class="material-symbols-outlined">add</span>
-<span>Add a New Shift</span>
-</button>
-</div>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
-<!-- Left Side: Time Slot Grid -->
-<div class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-sm overflow-hidden">
-<div class="flex items-center justify-between mb-md">
-<h2 class="font-headline-md text-headline-md text-on-surface">Timeline</h2>
-<div class="flex gap-xs">
-<span class="flex items-center gap-xs px-sm py-xs bg-secondary-container text-on-secondary-container rounded-full text-[12px] font-label-sm">
-<span class="w-2 h-2 rounded-full bg-secondary"></span> 
-                            Morning
+<body class="text-[#201b15]">
+    <header class="w-full top-0 sticky z-50 bg-[#fff8f5] h-20 border-b border-[#ece0d8]">
+        <div class="flex justify-between items-center max-w-7xl mx-auto px-8 h-full">
+            <div class="flex items-center gap-2">
+                <img alt="Logo" class="h-10 w-10" src="favicon.svg"/>
+                <span class="text-2xl font-bold text-[#282625]">ShiftGuardian</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userEmail" class="text-sm text-[#4a4640]"></span>
+                <button onclick="handleLogout()" class="text-sm font-medium text-[#ba1a1a] hover:underline">Log Out</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-8 py-12">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div class="space-y-2">
+                <a href="landingpage.html" class="flex items-center gap-1 text-[#6b5c4c] hover:text-[#282625] transition-all group">
+                    <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                    <span class="text-sm font-medium">Back to Calendar</span>
+                </a>
+                <h1 id="currentDateDisplay" class="text-4xl font-bold text-[#201b15]">Loading...</h1>
+                <p class="text-[#4a4640]">Manage shifts and coverage for this day.</p>
+            </div>
+            <div class="flex gap-3">
+                <input type="date" id="datePicker" class="rounded-lg border-[#ccc5bd] focus:border-[#282625] focus:ring-0">
+                <button onclick="openModal()" class="flex items-center gap-2 bg-[#282625] text-white px-6 py-3 rounded-lg font-bold shadow-sm hover:scale-105 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined">add</span>
+                    <span>Add New Shift</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-8 bg-white rounded-2xl p-6 border border-[#ece0d8] shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-[#201b15]">Timeline</h2>
+                    <div class="flex gap-2">
+                        <span class="flex items-center gap-1 px-3 py-1 bg-[#f4dfcb] text-[#716252] rounded-full text-xs font-bold">
+                            <span class="w-2 h-2 rounded-full bg-[#6b5c4c]"></span> Morning
                         </span>
-<span class="flex items-center gap-xs px-sm py-xs bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-[12px] font-label-sm">
-<span class="w-2 h-2 rounded-full bg-tertiary"></span> 
-                            Night
+                        <span class="flex items-center gap-1 px-3 py-1 bg-[#413c36] text-[#aea69e] rounded-full text-xs font-bold">
+                            <span class="w-2 h-2 rounded-full bg-[#2b2621]"></span> Night
                         </span>
-</div>
-</div>
-<div class="h-[600px] overflow-y-auto custom-scrollbar pr-sm">
-<!-- 24-Hour Grid -->
-<div class="relative space-y-0 min-w-full">
-<!-- Hour Lines -->
-<div class="absolute inset-0 pointer-events-none">
-<template id="hour-line-template">
-<div class="h-16 border-b border-surface-variant w-full"></div>
-</template>
-<script>
-                                const container = document.currentScript.previousElementSibling;
-                                for(let i=0; i<24; i++) {
-                                    document.write('<div class="h-16 border-b border-surface-variant w-full"></div>');
-                                }
-                            </script>
-</div>
-<!-- Shifts Rendering Area -->
-<div class="relative z-10 grid grid-cols-[60px_1fr] gap-0">
-<!-- 00:00 to 23:00 labels -->
-<script>
-                                for(let i=0; i<24; i++) {
-                                    const time = i < 10 ? `0${i}:00` : `${i}:00`;
-                                    document.write(`
-                                        <div class="h-16 flex items-start justify-center pr-xs py-xs text-on-surface-variant font-label-sm text-label-sm">
-                                            ${time}
-                                        </div>
-                                        <div class="h-16 relative"></div>
-                                    `);
-                                }
-                            </script>
-<!-- Absolute Positioned Shift Blocks -->
-<!-- Shift 1: Morning 08:00 - 16:00 -->
-<div class="absolute left-[60px] right-0 top-[512px] h-[512px] p-xs" style="z-index: 20;">
-<div class="w-full h-full bg-surface-container-high rounded-lg border-l-4 border-secondary p-sm shadow-sm hover:scale-[1.01] transition-all cursor-pointer group">
-<div class="flex justify-between items-start">
-<div>
-<p class="font-label-md text-label-md text-primary">Day Guard Shift</p>
-<p class="font-label-sm text-label-sm text-on-surface-variant">08:00 - 16:00</p>
-</div>
-<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
-</div>
-<div class="mt-sm flex -space-x-2">
-<div class="w-6 h-6 rounded-full bg-secondary-fixed border-2 border-surface-container-lowest"></div>
-<div class="w-6 h-6 rounded-full bg-primary-fixed border-2 border-surface-container-lowest"></div>
-</div>
-</div>
-</div>
-<!-- Shift 2: Night 22:00 - 06:00 (Visualized part) -->
-<div class="absolute left-[60px] right-0 top-[1408px] h-[128px] p-xs" style="z-index: 20;">
-<div class="w-full h-full bg-tertiary-container text-on-tertiary rounded-lg border-l-4 border-tertiary p-sm shadow-sm hover:scale-[1.01] transition-all cursor-pointer group">
-<div class="flex justify-between items-start">
-<div>
-<p class="font-label-md text-label-md text-on-tertiary">Night Watch</p>
-<p class="font-label-sm text-label-sm text-on-tertiary-container">22:00 - 06:00</p>
-</div>
-<span class="material-symbols-outlined text-on-tertiary-container opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Right Side: Details & Stats -->
-<div class="lg:col-span-4 space-y-md">
-<!-- Summary Card -->
-<div class="bg-surface-container-low rounded-xl p-md border border-outline-variant">
-<h3 class="font-headline-md text-headline-md mb-md text-on-surface">Daily Summary</h3>
-<div class="space-y-sm">
-<div class="flex justify-between items-center p-sm bg-surface-container-lowest rounded-lg">
-<span class="text-on-surface-variant">Total Coverage</span>
-<span class="font-label-md text-label-md text-primary">14 / 24 Hours</span>
-</div>
-<div class="flex justify-between items-center p-sm bg-surface-container-lowest rounded-lg">
-<span class="text-on-surface-variant">Assigned Guards</span>
-<span class="font-label-md text-label-md text-primary">4 Members</span>
-</div>
-<div class="flex justify-between items-center p-sm bg-surface-container-lowest rounded-lg">
-<span class="text-on-surface-variant">Gap Alert</span>
-<span class="font-label-md text-label-md text-error flex items-center gap-xs">
-<span class="material-symbols-outlined text-[16px]">warning</span>
-                                Overlap detected
-                            </span>
-</div>
-</div>
-</div>
-<!-- Staff List -->
-<div class="bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-sm">
-<h3 class="font-headline-md text-headline-md mb-md text-on-surface">On-Duty Team</h3>
-<div class="space-y-md">
-<div class="flex items-center gap-sm">
-<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold">MK</div>
-<div>
-<p class="font-label-md text-label-md text-primary">Marcus K.</p>
-<p class="font-label-sm text-label-sm text-on-surface-variant">Morning Shift</p>
-</div>
-</div>
-<div class="flex items-center gap-sm">
-<div class="w-10 h-10 rounded-full bg-primary-fixed-dim flex items-center justify-center text-on-primary-fixed-variant font-bold">SL</div>
-<div>
-<p class="font-label-md text-label-md text-primary">Sarah L.</p>
-<p class="font-label-sm text-label-sm text-on-surface-variant">Morning Shift</p>
-</div>
-</div>
-<div class="flex items-center gap-sm">
-<div class="w-10 h-10 rounded-full bg-tertiary-fixed-dim flex items-center justify-center text-on-tertiary-fixed-variant font-bold">JD</div>
-<div>
-<p class="font-label-md text-label-md text-primary">James D.</p>
-<p class="font-label-sm text-label-sm text-on-surface-variant">Night Watch</p>
-</div>
-</div>
-</div>
-<button class="w-full mt-md py-sm border border-outline text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">Manage Team</button>
-</div>
-</div>
-</div>
-</main>
-<!-- Footer Component -->
-<footer class="w-full py-xl bg-surface-container-low border-t border-outline-variant mt-xl">
-<div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-margin-desktop gap-md">
-<div class="flex flex-col items-center md:items-start gap-xs">
-<div class="flex items-center gap-sm">
-<img alt="Logo" class="h-8 w-8 opacity-60" src="https://lh3.googleusercontent.com/aida/ADBb0ugnA1ZX3CjjjC7jQxmNe_dl9A2oRISf_7HaeBUFmI3PKp7epvAlJsObZeduoY0lDn3zR2lO1NKfe8QXlkD41EbvY5oL_mzF3Hd_-jjpK-el2lXi7GyPgK1fd7l_bk5_IcF3QgsPKh5-QnRCJuvnBTEEA_0_ldedYqrihVFgOI7RFQ_WPiKH7tc099pHmuuZ96q4xgBcyxdKEjBBQm1HJxDIB9v0w1EC6sDkVuXk9oks1V_mhP6Tt1aD6sw"/>
-<span class="font-headline-md text-headline-md font-bold text-primary opacity-60">ShiftGuardian</span>
-</div>
-<p class="font-label-md text-label-md text-secondary">© 2024 ShiftGuardian. All rights reserved. Built for modern teams.</p>
-</div>
-<div class="flex gap-md">
-<a class="font-label-md text-label-md text-secondary hover:text-primary underline transition-all duration-300" href="#">Privacy Policy</a>
-<a class="font-label-md text-label-md text-secondary hover:text-primary underline transition-all duration-300" href="#">Terms of Service</a>
-<a class="font-label-md text-label-md text-secondary hover:text-primary underline transition-all duration-300" href="#">Support</a>
-</div>
-</div>
-</footer>
-<!-- Shift Modal Overlay (Hidden by Default) -->
-<div class="fixed inset-0 z-[100] hidden flex items-center justify-center p-margin-mobile" id="shiftModal">
-<div class="absolute inset-0 bg-primary/20 backdrop-blur-sm" onclick="closeModal()"></div>
-<div class="relative bg-surface-container-lowest w-full max-w-lg rounded-xl shadow-2xl p-xl border border-outline-variant transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
-<div class="flex justify-between items-center mb-md">
-<h2 class="font-headline-lg text-headline-lg text-on-surface">Add New Shift</h2>
-<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors" onclick="closeModal()">
-<span class="material-symbols-outlined">close</span>
-</button>
-</div>
-<form class="space-y-md">
-<div class="grid grid-cols-2 gap-md">
-<div class="flex flex-col gap-xs">
-<label class="font-label-md text-label-md text-on-surface-variant">Start Time</label>
-<input class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="time"/>
-</div>
-<div class="flex flex-col gap-xs">
-<label class="font-label-md text-label-md text-on-surface-variant">End Time</label>
-<input class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="time"/>
-</div>
-</div>
-<div class="flex flex-col gap-xs">
-<label class="font-label-md text-label-md text-on-surface-variant">Shift Type</label>
-<div class="grid grid-cols-3 gap-sm">
-<button class="flex flex-col items-center justify-center p-md bg-secondary-container text-on-secondary-container rounded-lg border-2 border-transparent hover:border-secondary transition-all" type="button">
-<span class="material-symbols-outlined">wb_sunny</span>
-<span class="font-label-sm text-label-sm mt-xs">Morning</span>
-</button>
-<button class="flex flex-col items-center justify-center p-md bg-surface-variant text-on-surface-variant rounded-lg border-2 border-transparent hover:border-secondary transition-all" type="button">
-<span class="material-symbols-outlined">cloud_queue</span>
-<span class="font-label-sm text-label-sm mt-xs">Afternoon</span>
-</button>
-<button class="flex flex-col items-center justify-center p-md bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-lg border-2 border-transparent hover:border-tertiary transition-all" type="button">
-<span class="material-symbols-outlined">dark_mode</span>
-<span class="font-label-sm text-label-sm mt-xs">Night</span>
-</button>
-</div>
-</div>
-<div class="flex flex-col gap-xs">
-<label class="font-label-md text-label-md text-on-surface-variant">Assigned Staff</label>
-<select class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all w-full">
-<option>Marcus K.</option>
-<option>Sarah L.</option>
-<option>James D.</option>
-<option>Elena R.</option>
-</select>
-</div>
-<div class="pt-md flex flex-col gap-sm">
-<button class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md text-label-md active:scale-[0.98] transition-all" type="submit">Save Shift Entry</button>
-<button class="w-full bg-transparent text-on-surface-variant py-sm rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors" onclick="closeModal()" type="button">Cancel</button>
-</div>
-</form>
-</div>
-</div>
-<script>
+                    </div>
+                </div>
+
+                <div class="h-[600px] overflow-y-auto custom-scrollbar pr-2 relative" id="timelineContainer">
+                    <!-- 24h Grid Labels and Lines -->
+                    <div class="grid grid-cols-[60px_1fr] relative">
+                        <script>
+                            for(let i=0; i<24; i++) {
+                                const time = i < 10 ? `0${i}:00` : `${i}:00`;
+                                document.write(`
+                                    <div class="h-16 flex items-start justify-center text-[#4a4640] text-xs font-medium border-r border-[#f8ece3]">${time}</div>
+                                    <div class="h-16 border-b border-[#f8ece3] relative" id="slot-${i}"></div>
+                                `);
+                            }
+                        </script>
+                        <!-- Shifts will be absolutely positioned here -->
+                        <div id="shiftsOverlay" class="absolute left-[60px] right-0 top-0 bottom-0 pointer-events-none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-[#fef1e9] rounded-2xl p-6 border border-[#ece0d8]">
+                    <h3 class="text-xl font-bold mb-4 text-[#201b15]">Daily Summary</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-white rounded-xl">
+                            <span class="text-[#4a4640]">Total Shifts</span>
+                            <span id="totalShifts" class="font-bold text-[#282625]">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white rounded-xl">
+                            <span class="text-[#4a4640]">Coverage</span>
+                            <span id="totalCoverage" class="font-bold text-[#282625]">0h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-[#ece0d8] shadow-sm">
+                    <h3 class="text-xl font-bold mb-4 text-[#201b15]">On-Duty Team</h3>
+                    <div id="staffList" class="space-y-4">
+                        <!-- Staff items go here -->
+                        <p class="text-sm text-[#4a4640]">No shifts assigned yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Shift Modal -->
+    <div id="shiftModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-[#282625]/20 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8 border border-[#ece0d8] transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalTitle" class="text-2xl font-bold text-[#201b15]">Add New Shift</h2>
+                <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#f8ece3]">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form id="shiftForm" class="space-y-4">
+                <input type="hidden" id="shiftId">
+                <div>
+                    <label class="block text-sm font-bold text-[#4a4640] mb-1">Shift Title</label>
+                    <input type="text" id="shiftTitle" required class="w-full p-3 rounded-xl border border-[#ccc5bd] focus:border-[#282625] outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-[#4a4640] mb-1">Start Time</label>
+                        <input type="time" id="startTime" required class="w-full p-3 rounded-xl border border-[#ccc5bd] focus:border-[#282625] outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-[#4a4640] mb-1">End Time</label>
+                        <input type="time" id="endTime" required class="w-full p-3 rounded-xl border border-[#ccc5bd] focus:border-[#282625] outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-[#4a4640] mb-1">Shift Type</label>
+                    <select id="shiftType" class="w-full p-3 rounded-xl border border-[#ccc5bd] focus:border-[#282625] outline-none">
+                        <option value="morning">Morning</option>
+                        <option value="afternoon">Afternoon</option>
+                        <option value="night">Night</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-[#4a4640] mb-1">Assigned Staff</label>
+                    <input type="text" id="staffName" required class="w-full p-3 rounded-xl border border-[#ccc5bd] focus:border-[#282625] outline-none">
+                </div>
+                <div class="pt-4 flex flex-col gap-2">
+                    <button type="submit" class="w-full bg-[#282625] text-white py-3 rounded-xl font-bold hover:shadow-lg active:scale-95 transition-all">Save Shift</button>
+                    <button type="button" id="deleteBtn" onclick="handleDelete()" class="w-full hidden bg-[#ba1a1a] text-white py-3 rounded-xl font-bold hover:shadow-lg active:scale-95 transition-all">Delete Shift</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script>
+        let currentUserId = null;
+        let selectedDate = new URLSearchParams(window.location.search).get('date') || new Date().toISOString().split('T')[0];
+        let currentShifts = [];
+
+        // Initialize
+        async function init() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUserId = session.user.id;
+            document.getElementById('userEmail').textContent = session.user.email;
+
+            document.getElementById('datePicker').value = selectedDate;
+            updateDateDisplay();
+            loadShifts();
+        }
+
+        function updateDateDisplay() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDateDisplay').textContent = new Date(selectedDate).toLocaleDateString(undefined, options);
+        }
+
+        document.getElementById('datePicker').addEventListener('change', (e) => {
+            selectedDate = e.target.value;
+            window.history.pushState({}, '', `?date=${selectedDate}`);
+            updateDateDisplay();
+            loadShifts();
+        });
+
+        async function loadShifts() {
+            const { data, error } = await _supabase
+                .from('shifts')
+                .select('*')
+                .eq('date', selectedDate)
+                .order('start_time', { ascending: true });
+
+            if (error) {
+                console.error('Error loading shifts:', error);
+                return;
+            }
+
+            currentShifts = data;
+            renderShifts();
+            updateSummary();
+        }
+
+        function renderShifts() {
+            const overlay = document.getElementById('shiftsOverlay');
+            overlay.innerHTML = '';
+            const staffList = document.getElementById('staffList');
+            staffList.innerHTML = '';
+
+            if (currentShifts.length === 0) {
+                staffList.innerHTML = '<p class="text-sm text-[#4a4640]">No shifts assigned yet.</p>';
+            }
+
+            currentShifts.forEach(shift => {
+                // Position in timeline
+                const [h, m] = shift.start_time.split(':').map(Number);
+                const [eh, em] = shift.end_time.split(':').map(Number);
+                const startPos = h * 64 + (m / 60) * 64;
+                let duration = (eh * 60 + em) - (h * 60 + m);
+                if (duration < 0) duration += 24 * 60; // Handle overnight shifts (basic)
+                const height = (duration / 60) * 64;
+
+                const shiftEl = document.createElement('div');
+                shiftEl.className = `absolute left-0 right-0 p-1 pointer-events-auto cursor-pointer group`;
+                shiftEl.style.top = `${startPos}px`;
+                shiftEl.style.height = `${height}px`;
+                shiftEl.style.zIndex = 20;
+
+                const colorClass = shift.type === 'night' ? 'bg-[#413c36] text-[#aea69e] border-[#2b2621]' : 'bg-[#f4dfcb] text-[#716252] border-[#6b5c4c]';
+
+                shiftEl.innerHTML = `
+                    <div onclick="editShift('${shift.id}')" class="w-full h-full rounded-lg border-l-4 p-3 shadow-sm hover:scale-[1.01] transition-all ${colorClass}">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-sm truncate">${shift.title}</p>
+                                <p class="text-xs opacity-80">${shift.start_time.slice(0,5)} - ${shift.end_time.slice(0,5)}</p>
+                            </div>
+                            <span class="material-symbols-outlined text-xs">edit</span>
+                        </div>
+                    </div>
+                `;
+                overlay.appendChild(shiftEl);
+
+                // Add to staff list
+                const staffItem = document.createElement('div');
+                staffItem.className = 'flex items-center gap-3';
+                staffItem.innerHTML = `
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold ${colorClass}">
+                        ${shift.staff_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </div>
+                    <div>
+                        <p class="font-bold text-sm">${shift.staff_name}</p>
+                        <p class="text-xs text-[#4a4640]">${shift.title}</p>
+                    </div>
+                `;
+                staffList.appendChild(staffItem);
+            });
+        }
+
+        function updateSummary() {
+            document.getElementById('totalShifts').textContent = currentShifts.length;
+            let totalMinutes = 0;
+            currentShifts.forEach(s => {
+                const [sh, sm] = s.start_time.split(':').map(Number);
+                const [eh, em] = s.end_time.split(':').map(Number);
+                let diff = (eh * 60 + em) - (sh * 60 + sm);
+                if (diff < 0) diff += 24 * 60;
+                totalMinutes += diff;
+            });
+            document.getElementById('totalCoverage').textContent = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+        }
+
+        // CRUD Actions
         function openModal() {
-            const modal = document.getElementById('shiftModal');
-            const content = document.getElementById('modalContent');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 10);
+            document.getElementById('modalTitle').textContent = 'Add New Shift';
+            document.getElementById('shiftForm').reset();
+            document.getElementById('shiftId').value = '';
+            document.getElementById('deleteBtn').classList.add('hidden');
+            document.getElementById('shiftModal').classList.remove('hidden');
         }
 
         function closeModal() {
-            const modal = document.getElementById('shiftModal');
-            const content = document.getElementById('modalContent');
-            content.classList.add('scale-95', 'opacity-0');
-            content.classList.remove('scale-100', 'opacity-100');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+            document.getElementById('shiftModal').classList.add('hidden');
         }
 
-        // Atmospheric micro-interaction: Subtle parallax on shift cards
-        document.addEventListener('mousemove', (e) => {
-            const cards = document.querySelectorAll('.group');
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
+        function editShift(id) {
+            const shift = currentShifts.find(s => s.id === id);
+            if (!shift) return;
 
-            cards.forEach(card => {
-                const rect = card.getBoundingClientRect();
-                const cardX = rect.left + rect.width / 2;
-                const cardY = rect.top + rect.height / 2;
-                
-                const distanceX = (mouseX - cardX) / 100;
-                const distanceY = (mouseY - cardY) / 100;
-                
-                if (Math.abs(distanceX) < 10 && Math.abs(distanceY) < 10) {
-                    card.style.transform = `translate(${distanceX}px, ${distanceY}px) scale(1.01)`;
-                } else {
-                    card.style.transform = `none`;
-                }
-            });
+            document.getElementById('modalTitle').textContent = 'Edit Shift';
+            document.getElementById('shiftId').value = shift.id;
+            document.getElementById('shiftTitle').value = shift.title;
+            document.getElementById('startTime').value = shift.start_time;
+            document.getElementById('endTime').value = shift.end_time;
+            document.getElementById('shiftType').value = shift.type;
+            document.getElementById('staffName').value = shift.staff_name;
+
+            document.getElementById('deleteBtn').classList.remove('hidden');
+            document.getElementById('shiftModal').classList.remove('hidden');
+        }
+
+        document.getElementById('shiftForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('shiftId').value;
+            const shiftData = {
+                user_id: currentUserId,
+                title: document.getElementById('shiftTitle').value,
+                start_time: document.getElementById('startTime').value,
+                end_time: document.getElementById('endTime').value,
+                type: document.getElementById('shiftType').value,
+                staff_name: document.getElementById('staffName').value,
+                date: selectedDate
+            };
+
+            let error;
+            if (id) {
+                const { error: err } = await _supabase.from('shifts').update(shiftData).eq('id', id);
+                error = err;
+            } else {
+                const { error: err } = await _supabase.from('shifts').insert([shiftData]);
+                error = err;
+            }
+
+            if (error) {
+                alert('Error saving shift: ' + error.message);
+            } else {
+                closeModal();
+                loadShifts();
+            }
         });
+
+        async function handleDelete() {
+            const id = document.getElementById('shiftId').value;
+            if (!id || !confirm('Are you sure you want to delete this shift?')) return;
+
+            const { error } = await _supabase.from('shifts').delete().eq('id', id);
+            if (error) {
+                alert('Error deleting shift: ' + error.message);
+            } else {
+                closeModal();
+                loadShifts();
+            }
+        }
+
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'landingpage.html';
+        }
+
+        init();
     </script>
-</body></html>
+</body>
+</html>

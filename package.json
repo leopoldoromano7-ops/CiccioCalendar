@@ -1,0 +1,9 @@
+{
+  "name": "shift-guardian",
+  "version": "1.0.0",
+  "description": "A calendar app for managing shifts",
+  "main": "index.html",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}

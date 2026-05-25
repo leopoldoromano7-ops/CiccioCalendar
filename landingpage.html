@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShiftGuardian - Manage Your Shifts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        body { font-family: 'Hanken Grotesk', sans-serif; background-color: #fff8f5; }
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff8f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out, visibility 0.5s;
+        }
+        .splash-logo {
+            width: 100px;
+            height: 100px;
+            animation: pulse-grow 2s infinite ease-in-out;
+        }
+        @keyframes pulse-grow {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+        .fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body class="text-[#201b15]">
+    <div id="splash" class="splash-screen">
+        <img src="favicon.svg" alt="Logo" class="splash-logo">
+    </div>
+
+    <div id="main-content" class="opacity-0 transition-opacity duration-1000">
+        <header class="w-full h-20 flex items-center justify-between px-8 max-w-7xl mx-auto">
+            <div class="flex items-center gap-2">
+                <img src="favicon.svg" alt="Logo" class="h-8 w-8">
+                <span class="text-2xl font-bold text-[#282625]">ShiftGuardian</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="login.html" class="text-[#4a4640] font-medium hover:text-[#282625]">Log In</a>
+                <a href="register.html" class="bg-[#282625] text-white px-6 py-2 rounded-lg font-medium hover:scale-105 transition-transform">Get Started</a>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-8 py-20 flex flex-col items-center text-center">
+            <h1 class="text-5xl md:text-7xl font-bold text-[#282625] mb-6">Master your schedule,<br>protect your time.</h1>
+            <p class="text-xl text-[#4a4640] max-w-2xl mb-10">ShiftGuardian is the simplest way for modern teams to manage shifts, track coverage, and ensure everyone is where they need to be.</p>
+
+            <div class="flex flex-col sm:flex-row gap-4 mb-20">
+                <a href="register.html" class="bg-[#282625] text-white px-8 py-4 rounded-xl text-lg font-bold hover:shadow-lg transition-all">Start Planning for Free</a>
+                <a href="#features" class="border-2 border-[#282625] text-[#282625] px-8 py-4 rounded-xl text-lg font-bold hover:bg-[#282625] hover:text-white transition-all">See How It Works</a>
+            </div>
+
+            <div class="w-full bg-white rounded-3xl p-8 shadow-xl border border-[#ece0d8] max-w-5xl">
+                <!-- Mock calendar preview -->
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">October 2026</h3>
+                    <div class="flex gap-2">
+                        <div class="w-8 h-8 rounded-full bg-[#f4dfcb]"></div>
+                        <div class="w-8 h-8 rounded-full bg-[#ebe1d8]"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-2">
+                    <script>
+                        for(let i=1; i<=31; i++) {
+                            const isToday = i === 1;
+                            document.write(`
+                                <div class="aspect-square flex flex-col items-center justify-center rounded-xl border border-[#f8ece3] ${isToday ? 'bg-[#f4dfcb] border-[#6b5c4c]' : 'hover:bg-[#fef1e9] cursor-pointer'}">
+                                    <span class="font-bold">${i}</span>
+                                    ${i % 7 === 0 || i % 5 === 0 ? '<div class="w-1.5 h-1.5 rounded-full bg-[#6b5c4c] mt-1"></div>' : ''}
+                                </div>
+                            `);
+                        }
+                    </script>
+                </div>
+            </div>
+        </main>
+
+        <footer class="w-full py-10 bg-[#f2e6dd] border-t border-[#ccc5bd] mt-20 text-center">
+            <p class="text-[#6b5c4c]">© 2024 ShiftGuardian. Made with love for modern teams.</p>
+        </footer>
+    </div>
+
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('splash').classList.add('fade-out');
+                document.getElementById('main-content').classList.remove('opacity-0');
+                document.getElementById('main-content').classList.add('opacity-100');
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
