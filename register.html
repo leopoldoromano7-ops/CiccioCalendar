@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html class="light" lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Registrati - CiccioSheets</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#282625",
+                        "secondary": "#6b5c4c",
+                        "background": "#fff8f5",
+                        "surface": "#fff8f5",
+                        "on-surface": "#201b15",
+                        "outline-variant": "#ccc5bd",
+                        "surface-container-low": "#fef1e9",
+                        "surface-container-lowest": "#ffffff"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-sans min-h-screen flex flex-col">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/init-supabase.js"></script>
+    <script src="js/auth-forms.js"></script>
+
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="w-full max-w-[440px] bg-surface-container-lowest rounded-xl p-8 shadow-xl border border-outline-variant/30">
+            <div class="flex flex-col items-center mb-8">
+                <h1 class="text-3xl font-bold text-primary">Crea Account</h1>
+                <p class="text-on-surface-variant mt-2">Unisciti alla famiglia di CiccioSheets</p>
+            </div>
+            <form class="space-y-4" id="registerForm">
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="fullName">Nome Completo</label>
+                    <input class="w-full rounded-lg border-outline-variant bg-surface-container-low" id="fullName" placeholder="Mario Rossi" required type="text">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="email">Email</label>
+                    <input class="w-full rounded-lg border-outline-variant bg-surface-container-low" id="email" placeholder="mario@esempio.it" required type="email">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="password">Password</label>
+                    <input class="w-full rounded-lg border-outline-variant bg-surface-container-low" id="password" placeholder="••••••••" required type="password">
+                </div>
+                <button class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-black transition-colors mt-4" type="submit">
+                    Registrati
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <p class="text-sm">Hai già un account? <a href="login.html" class="text-secondary font-bold hover:underline">Accedi</a></p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

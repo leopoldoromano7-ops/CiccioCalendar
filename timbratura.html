@@ -1,0 +1,366 @@
+<!DOCTYPE html><html class="light" lang="it" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Live Shift Tracking - ShiftGuardian</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#fef1e9",
+                    "on-surface": "#201b15",
+                    "surface-container": "#f8ece3",
+                    "on-tertiary-container": "#aea69e",
+                    "on-primary-fixed": "#1d1b1a",
+                    "background": "#fff8f5",
+                    "secondary-fixed-dim": "#d7c3b0",
+                    "primary-fixed": "#e6e1de",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#ebe1d8",
+                    "surface-container-high": "#f2e6dd",
+                    "inverse-surface": "#362f2a",
+                    "surface-tint": "#605e5c",
+                    "surface-container-highest": "#ece0d8",
+                    "on-background": "#201b15",
+                    "on-secondary-fixed": "#241a0e",
+                    "on-primary-fixed-variant": "#494644",
+                    "on-primary-container": "#aaa6a3",
+                    "on-primary": "#ffffff",
+                    "surface": "#fff8f5",
+                    "tertiary-fixed-dim": "#cec5bc",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#6b5c4c",
+                    "on-secondary-fixed-variant": "#524436",
+                    "outline": "#7c766f",
+                    "inverse-on-surface": "#fbeee6",
+                    "primary-container": "#3e3c3a",
+                    "surface-bright": "#fff8f5",
+                    "tertiary": "#2b2621",
+                    "secondary-fixed": "#f4dfcb",
+                    "on-tertiary-fixed-variant": "#4c463f",
+                    "inverse-primary": "#cac6c3",
+                    "primary": "#282625",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#cac6c3",
+                    "on-tertiary-fixed": "#1f1b16",
+                    "outline-variant": "#ccc5bd",
+                    "on-secondary-container": "#716252",
+                    "on-surface-variant": "#4a4640",
+                    "surface-variant": "#ece0d8",
+                    "surface-dim": "#e4d8cf",
+                    "secondary-container": "#f4dfcb",
+                    "tertiary-container": "#413c36",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "48px",
+                    "xl": "64px",
+                    "lg": "40px",
+                    "gutter": "24px",
+                    "base": "8px",
+                    "xs": "4px",
+                    "md": "24px",
+                    "margin-mobile": "16px",
+                    "sm": "12px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .shift-card-shadow {
+            box-shadow: 0 4px 20px rgba(107, 92, 76, 0.04);
+        }
+        .active-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/init-supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/timbratura.js"></script>
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface z-50">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-20">
+<div class="flex items-center gap-sm">
+<img alt="Logo" class="h-10 w-10 object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ugnA1ZX3CjjjC7jQxmNe_dl9A2oRISf_7HaeBUFmI3PKp7epvAlJsObZeduoY0lDn3zR2lO1NKfe8QXlkD41EbvY5oL_mzF3Hd_-jjpK-el2lXi7GyPgK1fd7l_bk5_IcF3QgsPKh5-QnRCJuvnBTEEA_0_ldedYqrihVFgOI7RFQ_WPiKH7tc099pHmuuZ96q4xgBcyxdKEjBBQm1HJxDIB9v0w1EC6sDkVuXk9oks1V_mhP6Tt1aD6sw">
+<span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
+</div>
+<nav class="hidden md:flex items-center gap-lg font-body-md text-body-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">CALENDAR</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">REPORT</a>
+
+
+</nav>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary font-label-md text-label-md px-sm py-xs">Log In</button>
+<button class="bg-primary-container text-on-primary-fixed font-label-md text-label-md px-lg py-sm rounded-lg active:scale-95 transition-transform">Get Started</button>
+</div>
+</div>
+</header>
+<main class="flex-grow max-w-5xl mx-auto w-full px-margin-mobile md:px-margin-desktop py-xl">
+<!-- Live Status Hero Section -->
+<section class="mb-xl">
+<div class="bg-surface-container-lowest rounded-xl p-lg shift-card-shadow border border-outline-variant transition-all duration-300" id="shiftContainer">
+<div class="flex flex-col items-center text-center space-y-md">
+<!-- Date & Time Display -->
+<div class="space-y-xs">
+<p class="font-label-md text-label-md text-secondary uppercase tracking-widest" id="currentDate">lunedì 25 maggio 2026</p>
+<h1 class="font-display-lg text-display-lg text-primary tabular-nums" id="currentTime">20:56:14</h1>
+</div>
+<!-- Main Action Button -->
+<div class="py-md">
+<button class="group relative flex flex-col items-center justify-center w-64 h-64 rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-all duration-300 shadow-xl active:scale-95" id="clockBtn">
+<span class="material-symbols-outlined text-4xl mb-xs" id="clockIcon">play_arrow</span>
+<span class="font-headline-md text-headline-md font-bold" id="clockLabel">Inizia Uscita</span>
+<span class="hidden font-body-md text-body-md opacity-80 mt-xs tabular-nums" id="timerDisplay">00:00:00</span>
+</button>
+</div>
+<!-- Status Indicator -->
+<div class="inline-flex items-center gap-sm px-md py-sm bg-surface-container rounded-full text-secondary font-label-md text-label-md" id="statusBadge">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="">Ciccio è a casa</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Dynamic Content: Active Details & History -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter items-start">
+<!-- Left: Active Activity Details (Hidden by default, shown when clocked in) -->
+<div class="hidden md:col-span-1 bg-surface-container rounded-xl p-md space-y-md" id="activeDetails">
+<h3 class="font-headline-md text-headline-md text-primary">In Corso</h3>
+<div class="flex items-center gap-sm p-sm bg-white rounded-lg border border-outline-variant/30">
+<img alt="User" class="w-12 h-12 rounded-full object-cover border-2 border-primary-fixed" data-alt="A professional headshot of a smiling young man in a clean, brightly lit modern office setting. He has a warm expression, embodying the friendly and dependable guardian personality. The image has soft, high-key lighting with a minimalist background featuring neutral tones and subtle natural textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmCYjRR1T1oofUftUAn0t5sla0vTyXGAi0s2nrvFsTIwSiQIp5Kzp_G_6nQ2uQPeNbtXcNVHkRDDY1gON21TlwWZY-bN-1i3lqRgNiIGrW_x9WEmGDB95R6b4jz7oNcX8pBkt5h0UyNoMLI81NZvvExZKzq_EK_lwV4s9DoKZjTJthRSYI-drjKQYuvwhVCG0ynxLeXKnRTUDS7nLhRz2rtRz34JnyVhyPzkntRUSfPRrprm18VKnum9KDPAMTfYdOR7RcURnLG3U">
+<div>
+<p class="font-label-md text-label-md text-primary">Marco Rossi</p>
+<p class="text-xs text-secondary italic">Con Ciccio</p>
+</div>
+</div>
+<div class="space-y-sm">
+<div class="flex justify-between text-label-sm font-label-sm uppercase text-secondary">
+<span class="">Iniziato alle</span>
+<span class="text-primary" id="startTimeLabel">--:--</span>
+</div>
+<div class="h-1 bg-outline-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-1/3 active-pulse"></div>
+</div>
+</div>
+</div>
+<!-- Right/Full: Recent Timbrature -->
+<div class="md:col-span-2 space-y-md" id="historySection">
+<div class="flex justify-between items-end">
+<h3 class="font-headline-md text-headline-md text-primary">Timbrature Recenti</h3>
+<button class="text-label-md font-label-md text-secondary hover:text-primary underline">Vedi tutto</button>
+</div>
+<div class="space-y-sm">
+<!-- History Item 1 -->
+<div class="flex items-center justify-between p-md bg-white rounded-xl border border-outline-variant/50 hover:border-secondary transition-colors group">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">history</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary">Fine Turno Mattina</p>
+<p class="text-xs text-secondary">Terminato alle 09:15</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-md text-label-md text-primary">45 min</p>
+<p class="text-xs text-secondary italic">Giuliana B.</p>
+</div>
+</div>
+<!-- History Item 2 -->
+<div class="flex items-center justify-between p-md bg-white rounded-xl border border-outline-variant/50 hover:border-secondary transition-colors group">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">login</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary">Inizio Turno Mattina</p>
+<p class="text-xs text-secondary">Iniziato alle 08:30</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center px-sm py-xs bg-surface-container rounded-full text-xs font-label-sm text-secondary">Parco Nord</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Dashboard Stats for Asymmetric Layout -->
+<div class="md:col-span-1 space-y-md">
+<div class="bg-secondary text-on-secondary p-md rounded-xl space-y-sm">
+<span class="material-symbols-outlined text-3xl">pets</span>
+<h4 class="font-label-md text-label-md uppercase opacity-80">Totale Oggi</h4>
+<p class="font-headline-lg text-headline-lg">1h 20m</p>
+<p class="text-xs opacity-70">2 uscite registrate</p>
+</div>
+<div class="bg-surface-container-high p-md rounded-xl border border-outline-variant">
+<h4 class="font-label-md text-label-md text-primary mb-sm">Promemoria</h4>
+<div class="flex items-start gap-sm text-sm text-secondary">
+<span class="material-symbols-outlined text-sm mt-0.5">info</span>
+<p class="">Ricordati di portare i sacchetti e la borraccia per Ciccio!</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl bg-surface-container-low border-t border-outline-variant">
+<div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-margin-desktop gap-md">
+<div class="flex items-center gap-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary"><span style="background-color: rgb(255, 248, 245);">CiccioSheets</span></span>
+</div>
+<div class="flex flex-wrap justify-center gap-md font-label-md text-label-md text-secondary">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Cookie Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Support</a>
+<a class="hover:text-primary transition-colors" href="#">Contact</a>
+</div>
+<p class="font-label-md text-label-md text-secondary">© 2024 ShiftGuardian. All rights reserved. Built for modern teams.</p>
+</div>
+</footer>
+<script disabled>
+        let isClockedIn = false;
+        let startTime = null;
+        let timerInterval = null;
+
+        const clockBtn = document.getElementById('clockBtn');
+        const clockIcon = document.getElementById('clockIcon');
+        const clockLabel = document.getElementById('clockLabel');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const statusBadge = document.getElementById('statusBadge');
+        const activeDetails = document.getElementById('activeDetails');
+        const startTimeLabel = document.getElementById('startTimeLabel');
+        const historySection = document.getElementById('historySection');
+        const currentTimeEl = document.getElementById('currentTime');
+        const currentDateEl = document.getElementById('currentDate');
+
+        // Clock Update
+        function updateClock() {
+            const now = new Date();
+            currentTimeEl.textContent = now.toLocaleTimeString('it-IT', { hour12: false });
+            currentDateEl.textContent = now.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":");
+        }
+
+        clockBtn.addEventListener('click', () => {
+            isClockedIn = !isClockedIn;
+
+            if (isClockedIn) {
+                // START WALK
+                startTime = new Date();
+                clockLabel.textContent = 'Termina Uscita';
+                clockIcon.textContent = 'stop';
+                clockBtn.classList.replace('bg-primary', 'bg-error');
+                timerDisplay.classList.remove('hidden');
+
+                statusBadge.classList.replace('bg-surface-container', 'bg-secondary-container');
+                statusBadge.querySelector('span:first-child').classList.replace('bg-outline', 'bg-secondary');
+                statusBadge.querySelector('span:first-child').classList.add('active-pulse');
+                statusBadge.querySelector('span:last-child').textContent = 'In giro con Ciccio';
+
+                activeDetails.classList.remove('hidden');
+                startTimeLabel.textContent = startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+                timerInterval = setInterval(() => {
+                    const elapsed = Math.floor((new Date() - startTime) / 1000);
+                    timerDisplay.textContent = formatTime(elapsed);
+                }, 1000);
+
+            } else {
+                // END WALK
+                clearInterval(timerInterval);
+                clockLabel.textContent = 'Inizia Uscita';
+                clockIcon.textContent = 'play_arrow';
+                clockBtn.classList.replace('bg-error', 'bg-primary');
+                timerDisplay.classList.add('hidden');
+
+                statusBadge.classList.replace('bg-secondary-container', 'bg-surface-container');
+                statusBadge.querySelector('span:first-child').classList.replace('bg-secondary', 'bg-outline');
+                statusBadge.querySelector('span:first-child').classList.remove('active-pulse');
+                statusBadge.querySelector('span:last-child').textContent = 'Ciccio è a casa';
+
+                activeDetails.classList.add('hidden');
+
+                // Add to history (simulated)
+                const endTime = new Date();
+                const diff = Math.floor((endTime - startTime) / 60000);
+
+                const newItem = document.createElement('div');
+                newItem.className = 'flex items-center justify-between p-md bg-white rounded-xl border border-secondary/20 transition-all';
+                newItem.innerHTML = `
+                    <div class="flex items-center gap-md">
+                        <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+                            <span class="material-symbols-outlined">check_circle</span>
+                        </div>
+                        <div>
+                            <p class="font-label-md text-label-md text-primary">Nuova Timbratura</p>
+                            <p class="text-xs text-secondary">Finito alle ${endTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-label-md text-label-md text-primary">${diff} min</p>
+                        <p class="text-xs text-secondary italic">Tu</p>
+                    </div>
+                `;
+                historySection.querySelector('.space-y-sm').prepend(newItem);
+            }
+        });
+    </script>
+
+
+</body></html>
