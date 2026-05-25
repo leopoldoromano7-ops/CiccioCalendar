@@ -80,8 +80,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             `).join('');
 
             dayCell.innerHTML = `
-                <span class="text-label-sm ${dateStr === new Date().toISOString().split('T')[0] ? 'font-bold text-primary underline' : 'text-outline-variant'}">${String(day).padStart(2, '0')}</span>
-                ${walksHtml}
+                <div class="flex flex-col h-full">
+                    <span class="text-label-sm ${dateStr === new Date().toISOString().split('T')[0] ? 'font-bold text-primary underline' : 'text-outline-variant'}">${String(day).padStart(2, '0')}</span>
+                    <div class="flex-grow overflow-hidden">
+                        ${walksHtml}
+                    </div>
+                </div>
             `;
             calendarGrid.appendChild(dayCell);
         }
@@ -132,8 +136,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dateStr = date.toISOString().split('T')[0];
         const dayWalks = walks.filter(w => w.walk_date === dateStr);
 
+        // Add a button to add new activity for the day
+        const addBtn = document.createElement('div');
+        addBtn.className = 'flex justify-center mb-md';
+        addBtn.innerHTML = `<button onclick="window.location.href='crud.html?date=${dateStr}'" class="bg-primary text-on-primary px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200 flex items-center gap-2">
+            <span class="material-symbols-outlined">add</span> Aggiungi Attività
+        </button>`;
+        calendarGrid.appendChild(addBtn);
+
         if (dayWalks.length === 0) {
-            calendarGrid.innerHTML = `<div class="text-center py-xl text-on-surface-variant">Nessuna attività registrata per oggi.</div>`;
+            const empty = document.createElement('div');
+            empty.className = 'text-center py-xl text-on-surface-variant';
+            empty.textContent = 'Nessuna attività registrata per oggi.';
+            calendarGrid.appendChild(empty);
         } else {
             dayWalks.forEach(w => {
                 const item = document.createElement('div');
@@ -144,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span class="material-symbols-outlined">pets</span>
                         </div>
                         <div>
-                            <p class="font-headline-md text-primary">Passeggiata</p>
+                            <p class="font-headline-md text-primary">${w.notes || 'Passeggiata'}</p>
                             <p class="text-body-md text-on-surface-variant">${w.start_time} - ${w.end_time || '--'}</p>
                         </div>
                     </div>
@@ -162,8 +177,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Navigation
-    const prevBtn = document.querySelector('button .material-symbols-outlined:contains("chevron_left")')?.parentElement || document.querySelectorAll('button')[0];
-    const nextBtn = document.querySelector('button .material-symbols-outlined:contains("chevron_right")')?.parentElement || document.querySelectorAll('button')[1];
+    const buttons = document.querySelectorAll('button');
+    let prevBtn, nextBtn;
+
+    buttons.forEach(btn => {
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) {
+            if (icon.textContent === 'chevron_left') prevBtn = btn;
+            if (icon.textContent === 'chevron_right') nextBtn = btn;
+        }
+    });
 
     prevBtn?.addEventListener('click', () => {
         if (currentView === 'month') referenceDate.setMonth(referenceDate.getMonth() - 1);
@@ -187,9 +210,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // UI update
         viewSelector.querySelectorAll('[data-view]').forEach(el => {
-            el.className = 'bg-surface-container px-md py-xs rounded-full text-label-md font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors';
+            el.classList.remove('bg-primary', 'text-on-primary');
+            el.classList.add('bg-surface-container', 'text-secondary', 'hover:bg-surface-container-high');
         });
-        target.className = 'bg-primary text-on-primary px-md py-xs rounded-full text-label-md font-label-md cursor-pointer';
+        target.classList.remove('bg-surface-container', 'text-secondary', 'hover:bg-surface-container-high');
+        target.classList.add('bg-primary', 'text-on-primary');
 
         if (currentView !== 'day' && window.calendarCleanup) window.calendarCleanup();
         loadView();

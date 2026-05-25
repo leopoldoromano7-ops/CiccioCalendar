@@ -125,6 +125,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/init-supabase.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/auth-ui.js"></script>
 <script src="js/crud.js"></script>
 <!-- TopAppBar -->
 <header class="w-full top-0 sticky z-50 bg-surface h-20 shadow-none">
@@ -150,17 +151,17 @@
 <!-- Header & Breadcrumb Section -->
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
 <div class="space-y-sm">
-<button class="flex items-center gap-xs text-secondary hover:text-primary transition-all group" onclick="window.history.back()">
+<button class="flex items-center gap-xs text-secondary hover:text-primary transition-all group" onclick="window.location.href='index.html'">
 <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-<span class="font-label-md text-label-md">Back to Calendar</span>
+<span class="font-label-md text-label-md">Torna al Calendario</span>
 </button>
-<h1 class="font-headline-lg text-headline-lg text-on-surface">Thursday, October 1st, 2026</h1>
-<p class="text-on-surface-variant font-body-md text-body-md">Manage shifts and coverage for this day.</p>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Caricamento data...</h1>
+<p class="text-on-surface-variant font-body-md text-body-md">Gestisci le attività e le uscite per questo giorno.</p>
 </div>
 <div class="flex gap-sm">
 <button class="flex items-center gap-sm bg-primary text-on-primary px-md py-sm rounded-lg font-label-md text-label-md shadow-sm active:scale-95 transition-all" onclick="openModal()">
 <span class="material-symbols-outlined">add</span>
-<span>Add a New Shift</span>
+<span>Aggiungi Attività</span>
 </button>
 </div>
 </div>
@@ -168,15 +169,15 @@
 <!-- Left Side: Time Slot Grid -->
 <div class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-sm overflow-hidden">
 <div class="flex items-center justify-between mb-md">
-<h2 class="font-headline-md text-headline-md text-on-surface">Timeline</h2>
+<h2 class="font-headline-md text-headline-md text-on-surface">Programma</h2>
 <div class="flex gap-xs">
 <span class="flex items-center gap-xs px-sm py-xs bg-secondary-container text-on-secondary-container rounded-full text-[12px] font-label-sm">
 <span class="w-2 h-2 rounded-full bg-secondary"></span> 
-                            Morning
+                            Mattina
                         </span>
 <span class="flex items-center gap-xs px-sm py-xs bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-[12px] font-label-sm">
 <span class="w-2 h-2 rounded-full bg-tertiary"></span> 
-                            Night
+                            Sera / Notte
                         </span>
 </div>
 </div>
@@ -218,28 +219,21 @@
 <div class="lg:col-span-4 space-y-md">
 <!-- Summary Card -->
 <div class="bg-surface-container-low rounded-xl p-md border border-outline-variant">
-<h3 class="font-headline-md text-headline-md mb-md text-on-surface">Daily Summary</h3>
+<h3 class="font-headline-md text-headline-md mb-md text-on-surface">Riepilogo Giorno</h3>
 <div class="space-y-sm">
 <div class="flex justify-between items-center p-sm bg-surface-container-lowest rounded-lg">
-<span class="text-on-surface-variant">Total Duration</span>
-<span class="font-label-md text-label-md text-primary" id="total-duration-display">0 Hours</span>
+<span class="text-on-surface-variant">Durata Totale</span>
+<span class="font-label-md text-label-md text-primary" id="total-duration-display">0 ore</span>
 </div>
 <div class="flex justify-between items-center p-sm bg-surface-container-lowest rounded-lg">
-<span class="text-on-surface-variant">Guards</span>
-<span class="font-label-md text-label-md text-primary" id="total-staff-count">0 Members</span>
-</div>
-<div class="flex justify-between items-center p-sm bg-surface-container-lowest rounded-lg">
-<span class="text-on-surface-variant">Gap Alert</span>
-<span class="font-label-md text-label-md text-error flex items-center gap-xs">
-<span class="material-symbols-outlined text-[16px]">warning</span>
-                                Overlap detected
-                            </span>
+<span class="text-on-surface-variant">Membri Team</span>
+<span class="font-label-md text-label-md text-primary" id="total-staff-count">0 persone</span>
 </div>
 </div>
 </div>
 <!-- Staff List -->
 <div class="bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-sm">
-<h3 class="font-headline-md text-headline-md mb-md text-on-surface">On-Duty Team</h3>
+<h3 class="font-headline-md text-headline-md mb-md text-on-surface">In Servizio Oggi</h3>
 <div class="space-y-md">
 <div class="flex items-center gap-sm">
 <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold">MK</div>
@@ -292,7 +286,7 @@
 <div class="absolute inset-0 bg-primary/20 backdrop-blur-sm" onclick="closeModal()"></div>
 <div class="relative bg-surface-container-lowest w-full max-w-lg rounded-xl shadow-2xl p-xl border border-outline-variant transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
 <div class="flex justify-between items-center mb-md">
-<h2 class="font-headline-lg text-headline-lg text-on-surface">Add New Shift</h2>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Nuova Attività</h2>
 <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors" onclick="closeModal()">
 <span class="material-symbols-outlined">close</span>
 </button>
@@ -300,34 +294,21 @@
 <form class="space-y-md">
 <div class="grid grid-cols-2 gap-md">
 <div class="flex flex-col gap-xs">
-<label class="font-label-md text-label-md text-on-surface-variant">Start Time</label>
+<label class="font-label-md text-label-md text-on-surface-variant">Ora Inizio</label>
 <input class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="time"/>
 </div>
 <div class="flex flex-col gap-xs">
-<label class="font-label-md text-label-md text-on-surface-variant">End Time</label>
+<label class="font-label-md text-label-md text-on-surface-variant">Ora Fine</label>
 <input class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="time"/>
 </div>
 </div>
 <div class="flex flex-col gap-xs">
-<label class="font-label-md text-label-md text-on-surface-variant">Shift Type</label>
-<div class="grid grid-cols-3 gap-sm">
-<button class="flex flex-col items-center justify-center p-md bg-secondary-container text-on-secondary-container rounded-lg border-2 border-transparent hover:border-secondary transition-all" type="button">
-<span class="material-symbols-outlined">wb_sunny</span>
-<span class="font-label-sm text-label-sm mt-xs">Morning</span>
-</button>
-<button class="flex flex-col items-center justify-center p-md bg-surface-variant text-on-surface-variant rounded-lg border-2 border-transparent hover:border-secondary transition-all" type="button">
-<span class="material-symbols-outlined">cloud_queue</span>
-<span class="font-label-sm text-label-sm mt-xs">Afternoon</span>
-</button>
-<button class="flex flex-col items-center justify-center p-md bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-lg border-2 border-transparent hover:border-tertiary transition-all" type="button">
-<span class="material-symbols-outlined">dark_mode</span>
-<span class="font-label-sm text-label-sm mt-xs">Night</span>
-</button>
-</div>
+<label class="font-label-md text-label-md text-on-surface-variant">Attività / Note</label>
+<input id="shift-notes" class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="text" placeholder="Es: Passeggiata Parco Nord"/>
 </div>
 <div class="pt-md flex flex-col gap-sm">
-<button class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md text-label-md active:scale-[0.98] transition-all" type="submit">Save Shift Entry</button>
-<button class="w-full bg-transparent text-on-surface-variant py-sm rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors" onclick="closeModal()" type="button">Cancel</button>
+<button class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md text-label-md active:scale-[0.98] transition-all" type="submit">Salva Attività</button>
+<button class="w-full bg-transparent text-on-surface-variant py-sm rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors" onclick="closeModal()" type="button">Annulla</button>
 </div>
 </form>
 </div>
