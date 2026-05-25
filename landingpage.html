@@ -1,7 +1,8 @@
 <!DOCTYPE html><html class="light" lang="it" style=""><head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>ShiftGuardian | Gestisci i tuoi turni con agilità</title>
+<title>CiccioSheets | Il calendario di Ciccio</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
@@ -128,6 +129,12 @@
     </style>
 </head>
 <body class="bg-background text-on-surface">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/init-supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/landing.js"></script>
+<script src="js/intro.js"></script>
+<script src="js/auth-ui.js"></script>
 <!-- TopAppBar -->
 <header class="w-full top-0 sticky z-50 bg-surface h-20 shadow-none">
 <div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
@@ -136,16 +143,15 @@
 <span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
 </div>
 <nav class="hidden md:flex items-center gap-lg">
-<a class="font-body-md text-body-md text-primary font-bold border-b-2 border-secondary transition-colors" href="#">CALENDAR<br></a>
-
-
-
-<a class="font-body-md text-body-md text-primary font-bold border-b-2 border-secondary transition-colors" href="#">REPORT</a></nav>
-<div class="flex items-center gap-md">
-<button class="hidden md:block font-body-md text-body-md text-primary hover:underline transition-all">Log In</button>
-<button class="bg-primary text-on-primary px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200">
+<a class="font-body-md text-body-md text-primary font-bold border-b-2 border-secondary transition-colors" href="landingpage.html">CALENDAR</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="report.html">REPORT</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="timbratura.html">TIMBRA</a>
+</nav>
+<div class="flex items-center gap-md" id="auth-buttons">
+<a href="login.html" class="hidden md:block font-body-md text-body-md text-primary hover:underline transition-all">Log In</a>
+<a href="register.html" class="bg-primary text-on-primary px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200">
                     Get Started
-                </button>
+                </a>
 </div>
 </div>
 </header>

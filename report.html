@@ -112,6 +112,10 @@
     </style>
 </head>
 <body class="bg-background text-on-surface font-body-md selection:bg-secondary-fixed">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/init-supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/report.js"></script>
 <!-- TopAppBar -->
 <nav class="w-full top-0 sticky z-50 bg-surface h-20 transition-all duration-300">
 <div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
@@ -119,10 +123,9 @@
 <span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
 </div>
 <div class="hidden md:flex items-center gap-xl">
-<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors" href="#">CALENDAR</a>
-<a class="text-primary font-bold border-b-2 border-secondary font-body-md transition-colors" href="#">REPORT<br></a>
-
-
+<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors" href="landingpage.html">CALENDAR</a>
+<a class="text-primary font-bold border-b-2 border-secondary font-body-md transition-colors" href="report.html">REPORT</a>
+<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors" href="timbratura.html">TIMBRA</a>
 </div>
 <div class="flex items-center gap-md">
 <button class="text-on-surface font-label-md hover:underline decoration-secondary transition-all">Log In</button>

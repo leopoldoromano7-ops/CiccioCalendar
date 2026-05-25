@@ -120,6 +120,10 @@
     </style>
 </head>
 <body class="bg-background text-on-background min-h-screen flex flex-col font-body-md">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/init-supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/timbratura.js"></script>
 <!-- TopAppBar -->
 <header class="w-full top-0 sticky bg-surface z-50">
 <div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-20">
@@ -261,7 +265,7 @@
 <p class="font-label-md text-label-md text-secondary">© 2024 ShiftGuardian. All rights reserved. Built for modern teams.</p>
 </div>
 </footer>
-<script>
+<script disabled>
         let isClockedIn = false;
         let startTime = null;
         let timerInterval = null;
@@ -295,7 +299,7 @@
 
         clockBtn.addEventListener('click', () => {
             isClockedIn = !isClockedIn;
-            
+
             if (isClockedIn) {
                 // START WALK
                 startTime = new Date();
@@ -303,7 +307,7 @@
                 clockIcon.textContent = 'stop';
                 clockBtn.classList.replace('bg-primary', 'bg-error');
                 timerDisplay.classList.remove('hidden');
-                
+
                 statusBadge.classList.replace('bg-surface-container', 'bg-secondary-container');
                 statusBadge.querySelector('span:first-child').classList.replace('bg-outline', 'bg-secondary');
                 statusBadge.querySelector('span:first-child').classList.add('active-pulse');
@@ -324,18 +328,18 @@
                 clockIcon.textContent = 'play_arrow';
                 clockBtn.classList.replace('bg-error', 'bg-primary');
                 timerDisplay.classList.add('hidden');
-                
+
                 statusBadge.classList.replace('bg-secondary-container', 'bg-surface-container');
                 statusBadge.querySelector('span:first-child').classList.replace('bg-secondary', 'bg-outline');
                 statusBadge.querySelector('span:first-child').classList.remove('active-pulse');
                 statusBadge.querySelector('span:last-child').textContent = 'Ciccio è a casa';
 
                 activeDetails.classList.add('hidden');
-                
+
                 // Add to history (simulated)
                 const endTime = new Date();
                 const diff = Math.floor((endTime - startTime) / 60000);
-                
+
                 const newItem = document.createElement('div');
                 newItem.className = 'flex items-center justify-between p-md bg-white rounded-xl border border-secondary/20 transition-all';
                 newItem.innerHTML = `

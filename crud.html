@@ -121,6 +121,10 @@
     </style>
 </head>
 <body class="font-body-md text-on-background selection:bg-secondary-container">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/init-supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crud.js"></script>
 <!-- Top Navigation Bar -->
 <header class="w-full top-0 sticky z-50 bg-surface h-20 transition-all duration-300">
 <div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
@@ -204,34 +208,6 @@
                                 }
                             </script>
 <!-- Absolute Positioned Shift Blocks -->
-<!-- Shift 1: Morning 08:00 - 16:00 -->
-<div class="absolute left-[60px] right-0 top-[512px] h-[512px] p-xs" style="z-index: 20;">
-<div class="w-full h-full bg-surface-container-high rounded-lg border-l-4 border-secondary p-sm shadow-sm hover:scale-[1.01] transition-all cursor-pointer group">
-<div class="flex justify-between items-start">
-<div>
-<p class="font-label-md text-label-md text-primary">Day Guard Shift</p>
-<p class="font-label-sm text-label-sm text-on-surface-variant">08:00 - 16:00</p>
-</div>
-<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
-</div>
-<div class="mt-sm flex -space-x-2">
-<div class="w-6 h-6 rounded-full bg-secondary-fixed border-2 border-surface-container-lowest"></div>
-<div class="w-6 h-6 rounded-full bg-primary-fixed border-2 border-surface-container-lowest"></div>
-</div>
-</div>
-</div>
-<!-- Shift 2: Night 22:00 - 06:00 (Visualized part) -->
-<div class="absolute left-[60px] right-0 top-[1408px] h-[128px] p-xs" style="z-index: 20;">
-<div class="w-full h-full bg-tertiary-container text-on-tertiary rounded-lg border-l-4 border-tertiary p-sm shadow-sm hover:scale-[1.01] transition-all cursor-pointer group">
-<div class="flex justify-between items-start">
-<div>
-<p class="font-label-md text-label-md text-on-tertiary">Night Watch</p>
-<p class="font-label-sm text-label-sm text-on-tertiary-container">22:00 - 06:00</p>
-</div>
-<span class="material-symbols-outlined text-on-tertiary-container opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
-</div>
-</div>
-</div>
 </div>
 </div>
 </div>
