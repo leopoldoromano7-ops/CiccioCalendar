@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.disabled = false;
                 btn.textContent = 'Accedi';
             } else {
-                window.location.href = 'landingpage.html';
+                 window.location.href = 'index.html';
             }
         });
     }

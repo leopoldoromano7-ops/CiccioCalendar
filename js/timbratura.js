@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .from('walk_sessions')
                 .insert([{
                     started_at: startTime.toISOString(),
-                    created_by: user.id,
+                    created_by: null,
                     is_active: true
                 }])
                 .select()
