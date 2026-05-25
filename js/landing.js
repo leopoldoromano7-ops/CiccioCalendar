@@ -1,49 +1,71 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const calendarGrid = document.querySelector('.calendar-grid');
     const monthTitle = document.querySelector('h3.text-primary');
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
+    const viewSelector = document.getElementById('view-selector');
 
-    async function loadCalendar() {
-        const firstDay = new Date(currentYear, currentMonth, 1);
-        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    let currentView = 'month'; // 'day', 'week', 'month'
+    let referenceDate = new Date();
 
-        if (monthTitle) monthTitle.textContent = firstDay.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+    async function loadView() {
+        if (!calendarGrid) return;
 
-        // Fetch walks for the month
+        let start, end;
+
+        if (currentView === 'month') {
+            start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+            end = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0);
+            monthTitle.textContent = start.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' }).toUpperCase();
+        } else if (currentView === 'week') {
+            const day = referenceDate.getDay();
+            const diff = referenceDate.getDate() - day + (day === 0 ? -6 : 1);
+            start = new Date(referenceDate.setDate(diff));
+            start.setHours(0,0,0,0);
+            end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            end.setHours(23,59,59,999);
+            monthTitle.textContent = `SETTIMANA ${start.getDate()} ${start.toLocaleDateString('it-IT', {month: 'short'})} - ${end.getDate()} ${end.toLocaleDateString('it-IT', {month: 'short'})}`.toUpperCase();
+        } else {
+            start = new Date(referenceDate);
+            start.setHours(0,0,0,0);
+            end = new Date(referenceDate);
+            end.setHours(23,59,59,999);
+            monthTitle.textContent = start.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+        }
+
         if (window.supabaseClient) {
             const { data: walks, error } = await window.supabaseClient
                 .from('walks')
                 .select('*')
-                .gte('walk_date', firstDay.toISOString().split('T')[0])
-                .lte('walk_date', lastDay.toISOString().split('T')[0]);
+                .gte('walk_date', start.toISOString().split('T')[0])
+                .lte('walk_date', end.toISOString().split('T')[0]);
 
-            renderCalendar(firstDay, lastDay, walks || []);
+            if (currentView === 'month') renderMonth(start, end, walks || []);
+            else if (currentView === 'week') renderWeek(start, walks || []);
+            else renderDay(start, walks || []);
         }
     }
 
-    function renderCalendar(firstDay, lastDay, walks) {
-        if (!calendarGrid) return;
-
-        // Keep header (LUN, MAR, etc.)
-        const headers = Array.from(calendarGrid.children).slice(0, 7);
+    function renderMonth(firstDay, lastDay, walks) {
         calendarGrid.innerHTML = '';
-        headers.forEach(h => calendarGrid.appendChild(h));
+        const days = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
+        days.forEach(d => {
+            const h = document.createElement('div');
+            h.className = 'p-md text-center font-label-sm text-on-surface-variant';
+            h.textContent = d;
+            calendarGrid.appendChild(h);
+        });
 
-        // Padding for first day of week
-        let startDay = firstDay.getDay(); // 0 is Sunday
-        startDay = startDay === 0 ? 6 : startDay - 1; // Adjust to Monday start
+        let startDay = firstDay.getDay();
+        startDay = startDay === 0 ? 6 : startDay - 1;
 
         for (let i = 0; i < startDay; i++) {
             const empty = document.createElement('div');
-            empty.className = 'bg-white min-h-[140px] p-sm';
-            empty.innerHTML = `<span class="text-label-sm text-outline-variant/30"></span>`;
+            empty.className = 'bg-white min-h-[140px] p-sm opacity-20';
             calendarGrid.appendChild(empty);
         }
 
-        // Days of month
         for (let day = 1; day <= lastDay.getDate(); day++) {
-            const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dateStr = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayWalks = walks.filter(w => w.walk_date === dateStr);
 
             const dayCell = document.createElement('div');
@@ -58,29 +80,120 @@ document.addEventListener('DOMContentLoaded', async () => {
             `).join('');
 
             dayCell.innerHTML = `
-                <span class="text-label-sm ${day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear() ? 'font-bold text-primary underline' : 'text-outline-variant'}">${String(day).padStart(2, '0')}</span>
+                <span class="text-label-sm ${dateStr === new Date().toISOString().split('T')[0] ? 'font-bold text-primary underline' : 'text-outline-variant'}">${String(day).padStart(2, '0')}</span>
                 ${walksHtml}
             `;
             calendarGrid.appendChild(dayCell);
         }
     }
 
+    function renderWeek(start, walks) {
+        calendarGrid.innerHTML = '';
+        const days = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
+        days.forEach(d => {
+            const h = document.createElement('div');
+            h.className = 'p-md text-center font-label-sm text-on-surface-variant';
+            h.textContent = d;
+            calendarGrid.appendChild(h);
+        });
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            const dateStr = d.toISOString().split('T')[0];
+            const dayWalks = walks.filter(w => w.walk_date === dateStr);
+
+            const dayCell = document.createElement('div');
+            dayCell.className = 'bg-white min-h-[400px] p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
+            dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
+
+            let walksHtml = dayWalks.map(w => `
+                <div class="mt-sm relative bg-surface-container-high p-sm rounded pl-md overflow-hidden shadow-sm">
+                    <div class="shift-accent bg-primary"></div>
+                    <p class="text-xs font-bold">${w.start_time} - ${w.end_time || '--'}</p>
+                </div>
+            `).join('');
+
+            dayCell.innerHTML = `
+                <div class="flex justify-between items-center mb-md">
+                    <span class="text-label-sm font-bold text-primary">${d.getDate()}</span>
+                </div>
+                ${walksHtml}
+            `;
+            calendarGrid.appendChild(dayCell);
+        }
+    }
+
+    function renderDay(date, walks) {
+        calendarGrid.innerHTML = '';
+        calendarGrid.classList.remove('calendar-grid');
+        calendarGrid.className = 'p-lg space-y-md bg-white';
+
+        const dateStr = date.toISOString().split('T')[0];
+        const dayWalks = walks.filter(w => w.walk_date === dateStr);
+
+        if (dayWalks.length === 0) {
+            calendarGrid.innerHTML = `<div class="text-center py-xl text-on-surface-variant">Nessuna attività registrata per oggi.</div>`;
+        } else {
+            dayWalks.forEach(w => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-md bg-surface-container-low rounded-xl border border-outline-variant';
+                item.innerHTML = `
+                    <div class="flex items-center gap-md">
+                        <div class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center">
+                            <span class="material-symbols-outlined">pets</span>
+                        </div>
+                        <div>
+                            <p class="font-headline-md text-primary">Passeggiata</p>
+                            <p class="text-body-md text-on-surface-variant">${w.start_time} - ${w.end_time || '--'}</p>
+                        </div>
+                    </div>
+                    <button onclick="window.location.href='crud.html?date=${dateStr}'" class="bg-primary text-on-primary px-md py-sm rounded-lg">Dettagli</button>
+                `;
+                calendarGrid.appendChild(item);
+            });
+        }
+
+        // Re-add class after render if we switch back
+        const cleanup = () => {
+             calendarGrid.className = 'calendar-grid p-xs bg-surface-variant/30';
+        };
+        window.calendarCleanup = cleanup;
+    }
+
     // Navigation
-    const icons = Array.from(document.querySelectorAll('.material-symbols-outlined'));
-    const prevBtn = icons.find(el => el.textContent.trim() === 'chevron_left')?.parentElement;
-    const nextBtn = icons.find(el => el.textContent.trim() === 'chevron_right')?.parentElement;
+    const prevBtn = document.querySelector('button .material-symbols-outlined:contains("chevron_left")')?.parentElement || document.querySelectorAll('button')[0];
+    const nextBtn = document.querySelector('button .material-symbols-outlined:contains("chevron_right")')?.parentElement || document.querySelectorAll('button')[1];
 
     prevBtn?.addEventListener('click', () => {
-        currentMonth--;
-        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-        loadCalendar();
+        if (currentView === 'month') referenceDate.setMonth(referenceDate.getMonth() - 1);
+        else if (currentView === 'week') referenceDate.setDate(referenceDate.getDate() - 7);
+        else referenceDate.setDate(referenceDate.getDate() - 1);
+        loadView();
     });
 
     nextBtn?.addEventListener('click', () => {
-        currentMonth++;
-        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-        loadCalendar();
+        if (currentView === 'month') referenceDate.setMonth(referenceDate.getMonth() + 1);
+        else if (currentView === 'week') referenceDate.setDate(referenceDate.getDate() + 7);
+        else referenceDate.setDate(referenceDate.getDate() + 1);
+        loadView();
     });
 
-    loadCalendar();
+    viewSelector?.addEventListener('click', (e) => {
+        const target = e.target.closest('[data-view]');
+        if (!target) return;
+
+        currentView = target.dataset.view;
+
+        // UI update
+        viewSelector.querySelectorAll('[data-view]').forEach(el => {
+            el.className = 'bg-surface-container px-md py-xs rounded-full text-label-md font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors';
+        });
+        target.className = 'bg-primary text-on-primary px-md py-xs rounded-full text-label-md font-label-md cursor-pointer';
+
+        if (currentView !== 'day' && window.calendarCleanup) window.calendarCleanup();
+        loadView();
+    });
+
+    loadView();
 });
