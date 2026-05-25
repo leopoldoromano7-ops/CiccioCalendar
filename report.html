@@ -1,0 +1,436 @@
+<!DOCTYPE html><html class="light" lang="it" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Statistiche e Report | ShiftGuardian</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#1f1b16",
+                      "secondary-fixed": "#f4dfcb",
+                      "inverse-on-surface": "#fbeee6",
+                      "surface-variant": "#ece0d8",
+                      "surface-dim": "#e4d8cf",
+                      "outline": "#7c766f",
+                      "inverse-primary": "#cac6c3",
+                      "secondary": "#6b5c4c",
+                      "on-secondary-fixed-variant": "#524436",
+                      "on-error": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed": "#e6e1de",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#362f2a",
+                      "surface-container": "#f8ece3",
+                      "on-background": "#201b15",
+                      "tertiary": "#2b2621",
+                      "surface-bright": "#fff8f5",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#f2e6dd",
+                      "surface-container-low": "#fef1e9",
+                      "tertiary-container": "#413c36",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed-variant": "#494644",
+                      "tertiary-fixed": "#ebe1d8",
+                      "on-error-container": "#93000a",
+                      "surface-tint": "#605e5c",
+                      "surface-container-highest": "#ece0d8",
+                      "on-secondary-container": "#716252",
+                      "background": "#fff8f5",
+                      "primary": "#282625",
+                      "on-tertiary-container": "#aea69e",
+                      "surface": "#fff8f5",
+                      "primary-fixed-dim": "#cac6c3",
+                      "tertiary-fixed-dim": "#cec5bc",
+                      "on-surface-variant": "#4a4640",
+                      "on-primary-container": "#aaa6a3",
+                      "on-surface": "#201b15",
+                      "on-secondary-fixed": "#241a0e",
+                      "error": "#ba1a1a",
+                      "primary-container": "#3e3c3a",
+                      "secondary-container": "#f4dfcb",
+                      "outline-variant": "#ccc5bd"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "base": "8px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "sm": "12px",
+                      "lg": "40px",
+                      "xs": "4px",
+                      "margin-desktop": "48px",
+                      "xl": "64px",
+                      "md": "24px"
+              },
+              "fontFamily": {
+                      "body-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Hanken Grotesk"],
+                      "label-sm": ["Inter"],
+                      "headline-lg": ["Hanken Grotesk"],
+                      "display-lg": ["Hanken Grotesk"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "500"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .soft-shadow {
+            box-shadow: 0 20px 40px -10px rgba(107, 92, 76, 0.04);
+        }
+        .chart-bar-glow {
+            filter: drop-shadow(0 2px 4px rgba(40, 38, 37, 0.1));
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #fff8f5; }
+        ::-webkit-scrollbar-thumb { background: #d7c3b0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-secondary-fixed">
+<!-- TopAppBar -->
+<nav class="w-full top-0 sticky z-50 bg-surface h-20 transition-all duration-300">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
+</div>
+<div class="hidden md:flex items-center gap-xl">
+<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors" href="#">CALENDAR</a>
+<a class="text-primary font-bold border-b-2 border-secondary font-body-md transition-colors" href="#">REPORT<br></a>
+
+
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface font-label-md hover:underline decoration-secondary transition-all">Log In</button>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md active:scale-95 duration-200 transition-transform">Get Started</button>
+</div>
+</div>
+</nav>
+<main class="max-w-7xl mx-auto px-margin-desktop py-xl">
+<!-- Page Header & Filter -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary mb-xs">Statistiche e Report</h1>
+<p class="text-on-surface-variant font-body-md">Analizza le attività e le performance del team con Ciccio.</p>
+</div>
+<div class="flex items-center gap-sm bg-surface-container-low p-xs rounded-xl outline outline-1 outline-outline-variant">
+<div class="flex items-center px-md py-xs gap-sm">
+<span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md">01 Ott - 31 Ott 2024</span>
+</div>
+<button class="bg-surface-container-highest hover:bg-surface-variant p-xs rounded-lg transition-colors">
+<span class="material-symbols-outlined" data-icon="expand_more">expand_more</span>
+</button>
+</div>
+</header>
+<!-- Bento Grid for Key Metrics -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-md mb-xl">
+<!-- Metric 1 -->
+<div class="bg-surface-container-lowest p-md rounded-xl soft-shadow border-l-4 border-primary group hover:scale-[1.01] transition-transform" style="transform: translateY(0px) scale(1); box-shadow: rgba(107, 92, 76, 0.04) 0px 20px 40px -10px;">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-on-surface-variant font-label-md">Totale Ore con Ciccio</span>
+<span class="material-symbols-outlined text-secondary bg-secondary-fixed p-xs rounded-full" data-icon="schedule">schedule</span>
+</div>
+<div class="flex items-baseline gap-xs">
+<span class="font-display-lg text-display-lg text-primary">124.5</span>
+<span class="font-label-md text-on-surface-variant">ore totali</span>
+</div>
+<div class="mt-md flex items-center gap-xs text-secondary">
+<span class="material-symbols-outlined text-[18px]" data-icon="trending_up">trending_up</span>
+<span class="font-label-sm">+12% rispetto al mese scorso</span>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="bg-surface-container-lowest p-md rounded-xl soft-shadow border-l-4 border-secondary group hover:scale-[1.01] transition-transform" style="transform: translateY(0px) scale(1); box-shadow: rgba(107, 92, 76, 0.04) 0px 20px 40px -10px;">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-on-surface-variant font-label-md">Uscita più Lunga</span>
+<span class="material-symbols-outlined text-secondary bg-secondary-fixed p-xs rounded-full" data-icon="forest">forest</span>
+</div>
+<div class="flex items-baseline gap-xs">
+<span class="font-display-lg text-display-lg text-primary">3h 45m</span>
+</div>
+<div class="mt-md flex items-center gap-xs text-on-surface-variant">
+<span class="font-label-sm">Registrata da Marco B. il 14 Ott</span>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="bg-surface-container-lowest p-md rounded-xl soft-shadow border-l-4 border-tertiary group hover:scale-[1.01] transition-transform" style="transform: translateY(0px) scale(1); box-shadow: rgba(107, 92, 76, 0.04) 0px 20px 40px -10px;">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-on-surface-variant font-label-md">Miglior Accuditore</span>
+<span class="material-symbols-outlined text-secondary bg-secondary-fixed p-xs rounded-full" data-icon="workspace_premium" data-weight="fill" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden outline outline-2 outline-secondary-fixed outline-offset-2">
+<img alt="Portrait of the best employee" class="w-full h-full object-cover" data-alt="A professional headshot of a friendly man with a warm smile, set against a soft blurred outdoor background. The lighting is natural and bright, matching the clean and airy light-mode design system. His expression is confident and supportive, embodying the guardian brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr9TioGF0VpnG2ArpIBtmALEHvrunv_ksMPIwZUOvDjJ7IFPl5CGXUxT6Dbf4xdGl_6gFknIAPhgH-aCqw2QvX4BqNYujQVjvBeSPX7PxPCK4CG1DGIPB_JJSqayVTWzh37foxZgcVv5iJdNONoGwkVFwadZHej8b0LwFShlbVqE4P7vXFOFstN7iADpPUOC3MKZCDXDomtx9QFT0FM4HnhKpYu9qt5iO7cdWS-IrM6aO0Kn1k96bDftYfR0pEwFTnQY2NWcCajuY">
+</div>
+<div>
+<span class="block font-headline-md text-primary">Elena Rossi</span>
+<span class="font-label-sm text-on-surface-variant">42 uscite totali</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-xl">
+<!-- Classifica Team (Left Sidebar-ish) -->
+<div class="lg:col-span-1 flex flex-col gap-md">
+<div class="bg-surface-container-lowest p-md rounded-xl soft-shadow">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-md text-primary">Classifica Team</h3>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="leaderboard">leaderboard</span>
+</div>
+<div class="space-y-lg">
+<!-- Item 1 -->
+<div>
+<div class="flex justify-between items-center mb-xs">
+<span class="font-label-md text-primary">Elena Rossi</span>
+<span class="font-label-sm text-secondary">48h</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 85%"></div>
+</div>
+</div>
+<!-- Item 2 -->
+<div>
+<div class="flex justify-between items-center mb-xs">
+<span class="font-label-md text-primary">Marco Bianchi</span>
+<span class="font-label-sm text-secondary">42h</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full transition-all duration-1000" style="width: 72%"></div>
+</div>
+</div>
+<!-- Item 3 -->
+<div>
+<div class="flex justify-between items-center mb-xs">
+<span class="font-label-md text-primary">Giulia Verdi</span>
+<span class="font-label-sm text-secondary">31h</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full transition-all duration-1000" style="width: 55%"></div>
+</div>
+</div>
+<!-- Item 4 -->
+<div>
+<div class="flex justify-between items-center mb-xs">
+<span class="font-label-md text-primary">Luca Neri</span>
+<span class="font-label-sm text-secondary">18h</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-outline-variant rounded-full transition-all duration-1000" style="width: 32%"></div>
+</div>
+</div>
+</div>
+<button class="w-full mt-xl py-sm rounded-lg border border-outline-variant text-on-surface-variant font-label-md hover:bg-surface-container-low transition-colors">
+                        Vedi Classifica Completa
+                    </button>
+</div>
+<!-- Small Activity Summary -->
+<div class="bg-surface-container-low p-md rounded-xl">
+<h4 class="font-label-md text-secondary mb-sm">Attività Popolare</h4>
+<div class="flex flex-wrap gap-xs">
+<span class="px-sm py-xs bg-secondary-container text-on-secondary-container rounded-full font-label-sm">Passeggiata Parco</span>
+<span class="px-sm py-xs bg-secondary-container text-on-secondary-container rounded-full font-label-sm">Toelettatura</span>
+<span class="px-sm py-xs bg-secondary-container text-on-secondary-container rounded-full font-label-sm">Gioco</span>
+</div>
+</div>
+</div>
+<!-- Frequenza Uscite (Right Content) -->
+<div class="lg:col-span-2 space-y-xl">
+<!-- Bar Chart Placeholder -->
+<div class="bg-surface-container-lowest p-md rounded-xl soft-shadow" style="transform: translateY(0px) scale(1); box-shadow: rgba(107, 92, 76, 0.04) 0px 20px 40px -10px;">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-md text-primary">Frequenza Uscite Settimanale</h3>
+<div class="flex gap-sm">
+<span class="flex items-center gap-xs font-label-sm text-on-surface-variant">
+<span class="w-3 h-3 rounded-full bg-primary"></span> Mattina
+                            </span>
+<span class="flex items-center gap-xs font-label-sm text-on-surface-variant">
+<span class="w-3 h-3 rounded-full bg-secondary"></span> Pomeriggio
+                            </span>
+</div>
+</div>
+<div class="h-[280px] flex items-end justify-between px-md">
+<!-- Chart Bar Group -->
+<div class="flex flex-col items-center gap-sm group h-full justify-end">
+<div class="flex gap-1 items-end h-full">
+<div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 60%"></div>
+<div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 40%"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">Lun</span>
+</div>
+<div class="flex flex-col items-center gap-sm group h-full justify-end">
+<div class="flex gap-1 items-end h-full">
+<div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 45%"></div>
+<div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 65%"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">Mar</span>
+</div>
+<div class="flex flex-col items-center gap-sm group h-full justify-end">
+<div class="flex gap-1 items-end h-full">
+<div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 80%"></div>
+<div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 30%"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">Mer</span>
+</div>
+<div class="flex flex-col items-center gap-sm group h-full justify-end">
+<div class="flex gap-1 items-end h-full">
+<div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 55%"></div>
+<div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 50%"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">Gio</span>
+</div>
+<div class="flex flex-col items-center gap-sm group h-full justify-end">
+<div class="flex gap-1 items-end h-full">
+<div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 70%"></div>
+<div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 20%"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">Ven</span>
+</div>
+<div class="flex flex-col items-center gap-sm group h-full justify-end">
+<div class="flex gap-1 items-end h-full">
+<div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 90%"></div>
+<div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 85%"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">Sab</span>
+</div>
+<div class="flex flex-col items-center gap-sm group h-full justify-end">
+<div class="flex gap-1 items-end h-full">
+<div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 40%"></div>
+<div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: 95%"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">Dom</span>
+</div>
+</div>
+</div>
+<!-- Dettaglio Turni Table -->
+<div class="bg-surface-container-lowest rounded-xl soft-shadow overflow-hidden" style="transform: translateY(0px) scale(1); box-shadow: rgba(107, 92, 76, 0.04) 0px 20px 40px -10px;">
+<div class="px-md py-lg border-b border-surface-container">
+<h3 class="font-headline-md text-primary">Dettaglio Attività Recenti</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-md py-sm font-label-sm text-secondary">Membro Team</th>
+<th class="px-md py-sm font-label-sm text-secondary">Attività</th>
+<th class="px-md py-sm font-label-sm text-secondary">Durata</th>
+<th class="px-md py-sm font-label-sm text-secondary">Data</th>
+<th class="px-md py-sm font-label-sm text-secondary"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-md py-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center font-label-sm">ER</div>
+<span class="font-body-md text-on-surface">Elena Rossi</span>
+</div>
+</td>
+<td class="px-md py-md">
+<span class="font-body-md">Passeggiata Parco</span>
+</td>
+<td class="px-md py-md font-body-md">1h 15m</td>
+<td class="px-md py-md text-on-surface-variant font-label-sm">Oggi, 09:30</td>
+<td class="px-md py-md text-right">
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-md py-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center font-label-sm">MB</div>
+<span class="font-body-md text-on-surface">Marco Bianchi</span>
+</div>
+</td>
+<td class="px-md py-md">
+<span class="font-body-md">Sessione Gioco</span>
+</td>
+<td class="px-md py-md font-body-md">45m</td>
+<td class="px-md py-md text-on-surface-variant font-label-sm">Ieri, 18:20</td>
+<td class="px-md py-md text-right">
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-md py-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center font-label-sm">GV</div>
+<span class="font-body-md text-on-surface">Giulia Verdi</span>
+</div>
+</td>
+<td class="px-md py-md">
+<span class="font-body-md">Toelettatura</span>
+</td>
+<td class="px-md py-md font-body-md">2h 00m</td>
+<td class="px-md py-md text-on-surface-variant font-label-sm">28 Ott, 11:00</td>
+<td class="px-md py-md text-right">
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-md bg-surface-container-low text-center">
+<a class="font-label-md text-primary hover:underline" href="#">Carica altre attività</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl bg-surface-container-low border-t border-outline-variant">
+<div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-margin-desktop gap-md">
+<div>
+<span class="font-headline-md text-headline-md font-bold text-primary"><span style="background-color: rgb(255, 248, 245);">CiccioSheets</span></span>
+<p class="mt-xs text-secondary font-label-md">© 2024 ShiftGuardian. All rights reserved. Built for modern teams.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-md">
+<a class="text-secondary font-label-md hover:text-primary underline transition-all" href="#">Privacy Policy</a>
+<a class="text-secondary font-label-md hover:text-primary underline transition-all" href="#">Terms of Service</a>
+<a class="text-secondary font-label-md hover:text-primary underline transition-all" href="#">Cookie Policy</a>
+<a class="text-secondary font-label-md hover:text-primary underline transition-all" href="#">Support</a>
+<a class="text-secondary font-label-md hover:text-primary underline transition-all" href="#">Contact</a>
+</div>
+</div>
+</footer>
+<script>
+        // Simple micro-interaction for cards
+        document.querySelectorAll('.soft-shadow').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px) scale(1.01)';
+                card.style.boxShadow = '0 30px 60px -12px rgba(107, 92, 76, 0.08)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+                card.style.boxShadow = '0 20px 40px -10px rgba(107, 92, 76, 0.04)';
+            });
+        });
+    </script>
+
+
+</body></html>
