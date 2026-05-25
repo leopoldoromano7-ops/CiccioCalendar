@@ -136,6 +136,7 @@
 <script src="js/intro.js"></script>
 <script src="js/auth-ui.js"></script>
 <!-- TopAppBar -->
+
 <header class="w-full top-0 sticky z-50 bg-surface h-20 shadow-none">
 <div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
 <div class="flex items-center gap-sm">
@@ -143,7 +144,7 @@
 <span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
 </div>
 <nav class="hidden md:flex items-center gap-lg">
-<a class="font-body-md text-body-md text-primary font-bold border-b-2 border-secondary transition-colors" href="index.html">CALENDAR</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="index.html">CALENDAR</a>
 <a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="report.html">REPORT</a>
 <a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="timbratura.html">TIMBRA</a>
 </nav>
@@ -155,6 +156,7 @@
 </div>
 </div>
 </header>
+
 <main>
 <!-- Hero Section -->
 <section class="max-w-7xl mx-auto px-margin-desktop py-xl md:py-[120px] text-center">
@@ -195,9 +197,9 @@
 <button class="p-xs hover:bg-surface-container rounded-full transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
 </div>
 </div>
-<div class="flex gap-sm"><span class="bg-surface-container px-md py-xs rounded-full text-label-md font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors">Giorno</span>
-<span class="bg-surface-container px-md py-xs rounded-full text-label-md font-label-md text-secondary">Settimana</span>
-<span class="bg-primary text-on-primary px-md py-xs rounded-full text-label-md font-label-md">Mese</span>
+<div class="flex gap-sm"><span id="viewDay" class="bg-surface-container px-md py-xs rounded-full text-label-md font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors">Giorno</span>
+<span id="viewWeek" class="bg-surface-container px-md py-xs rounded-full text-label-md font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors">Settimana</span>
+<span id="viewMonth" class="bg-primary text-on-primary px-md py-xs rounded-full text-label-md font-label-md cursor-pointer">Mese</span>
 </div>
 </div>
 <!-- Calendar Content -->
@@ -306,7 +308,7 @@
 <img alt="CiccioSheets Logo" class="w-8 h-8 opacity-70" src="favicon.svg">
 <span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
 </div>
-<p class="font-label-md text-label-md text-secondary max-w-[300px] text-center md:text-left">© 2024 CiccioSheets. All rights reserved. Built for modern teams.</p>
+<p class="font-label-md text-label-md text-secondary max-w-[300px] text-center md:text-left">&copy; 2024 CiccioSheets. All rights reserved. Built for modern teams.</p>
 </div>
 <div class="flex flex-wrap justify-center gap-md">
 <a class="font-label-md text-label-md text-secondary hover:text-primary underline transition-all" href="#">Privacy Policy</a>

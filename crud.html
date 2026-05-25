@@ -127,24 +127,27 @@
 <script src="js/auth.js"></script>
 <script src="js/crud.js"></script>
 <!-- Top Navigation Bar -->
-<header class="w-full top-0 sticky z-50 bg-surface h-20 transition-all duration-300">
+
+<header class="w-full top-0 sticky z-50 bg-surface h-20 shadow-none">
 <div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
 <div class="flex items-center gap-sm">
-<img alt="Logo" class="h-10 w-10 object-contain" src="favicon.svg"/>
+<img alt="CiccioSheets Logo" class="w-10 h-10 object-contain" src="favicon.svg">
 <span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
 </div>
 <nav class="hidden md:flex items-center gap-lg">
-<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Product</a>
-<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Solutions</a>
-<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Pricing</a>
-<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Resources</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="index.html">CALENDAR</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="report.html">REPORT</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="timbratura.html">TIMBRA</a>
 </nav>
-<div class="flex items-center gap-md">
-<button class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">Log In</button>
-<button class="bg-primary text-on-primary px-md py-sm rounded-lg font-label-md text-label-md active:scale-95 duration-200 transition-all">Get Started</button>
+<div class="flex items-center gap-md" id="auth-buttons">
+<a href="login.html" class="hidden md:block font-body-md text-body-md text-primary hover:underline transition-all">Log In</a>
+<a href="register.html" class="bg-primary text-on-primary px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200">
+                    Get Started
+                </a>
 </div>
 </div>
 </header>
+
 <main class="max-w-7xl mx-auto px-margin-desktop py-xl">
 <!-- Header & Breadcrumb Section -->
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
@@ -275,7 +278,7 @@
 <img alt="Logo" class="h-8 w-8 opacity-60" src="favicon.svg"/>
 <span class="font-headline-md text-headline-md font-bold text-primary opacity-60">CiccioSheets</span>
 </div>
-<p class="font-label-md text-label-md text-secondary">© 2024 CiccioSheets. All rights reserved. Built for modern teams.</p>
+<p class="font-label-md text-label-md text-secondary">&copy; 2024 CiccioSheets. All rights reserved. Built for modern teams.</p>
 </div>
 <div class="flex gap-md">
 <a class="font-label-md text-label-md text-secondary hover:text-primary underline transition-all duration-300" href="#">Privacy Policy</a>
@@ -381,4 +384,5 @@
             });
         });
     </script>
+<script src="js/auth-ui.js"></script>
 </body></html>

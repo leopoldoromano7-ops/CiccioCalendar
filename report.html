@@ -118,39 +118,50 @@
 <script src="js/auth.js"></script>
 <script src="js/report.js"></script>
 <!-- TopAppBar -->
-<nav class="w-full top-0 sticky z-50 bg-surface h-20 transition-all duration-300">
+
+<header class="w-full top-0 sticky z-50 bg-surface h-20 shadow-none">
 <div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
-<div class="flex items-center gap-md">
+<div class="flex items-center gap-sm">
+<img alt="CiccioSheets Logo" class="w-10 h-10 object-contain" src="favicon.svg">
 <span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
 </div>
-<div class="hidden md:flex items-center gap-xl">
-<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors" href="index.html">CALENDAR</a>
-<a class="text-primary font-bold border-b-2 border-secondary font-body-md transition-colors" href="report.html">REPORT</a>
-<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors" href="timbratura.html">TIMBRA</a>
-</div>
-<div class="flex items-center gap-md">
-<button class="text-on-surface font-label-md hover:underline decoration-secondary transition-all">Log In</button>
-<button class="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md active:scale-95 duration-200 transition-transform">Get Started</button>
-</div>
-</div>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="index.html">CALENDAR</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="report.html">REPORT</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="timbratura.html">TIMBRA</a>
 </nav>
-<main class="max-w-7xl mx-auto px-margin-desktop py-xl">
-<!-- Page Header & Filter -->
-<header class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
-<div>
-<h1 class="font-headline-lg text-headline-lg text-primary mb-xs">Statistiche e Report</h1>
-<p class="text-on-surface-variant font-body-md">Analizza le attività e le performance del team con Ciccio.</p>
+<div class="flex items-center gap-md" id="auth-buttons">
+<a href="login.html" class="hidden md:block font-body-md text-body-md text-primary hover:underline transition-all">Log In</a>
+<a href="register.html" class="bg-primary text-on-primary px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200">
+                    Get Started
+                </a>
 </div>
-<div class="flex items-center gap-sm bg-surface-container-low p-xs rounded-xl outline outline-1 outline-outline-variant">
-<div class="flex items-center px-md py-xs gap-sm">
-<span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
-<span class="font-label-md">01 Ott - 31 Ott 2024</span>
-</div>
-<button class="bg-surface-container-highest hover:bg-surface-variant p-xs rounded-lg transition-colors">
-<span class="material-symbols-outlined" data-icon="expand_more">expand_more</span>
-</button>
 </div>
 </header>
+
+<main class="max-w-7xl mx-auto px-margin-desktop py-xl">
+<!-- Page Header & Filter -->
+
+<header class="w-full top-0 sticky z-50 bg-surface h-20 shadow-none">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
+<div class="flex items-center gap-sm">
+<img alt="CiccioSheets Logo" class="w-10 h-10 object-contain" src="favicon.svg">
+<span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
+</div>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="index.html">CALENDAR</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="report.html">REPORT</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="timbratura.html">TIMBRA</a>
+</nav>
+<div class="flex items-center gap-md" id="auth-buttons">
+<a href="login.html" class="hidden md:block font-body-md text-body-md text-primary hover:underline transition-all">Log In</a>
+<a href="register.html" class="bg-primary text-on-primary px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200">
+                    Get Started
+                </a>
+</div>
+</div>
+</header>
+
 <!-- Bento Grid for Key Metrics -->
 <section class="grid grid-cols-1 md:grid-cols-3 gap-md mb-xl">
 <!-- Metric 1 -->
@@ -189,7 +200,7 @@
 </div>
 <div class="flex items-center gap-md">
 <div class="w-12 h-12 rounded-full overflow-hidden outline outline-2 outline-secondary-fixed outline-offset-2">
-<img alt="Portrait of the best employee" class="w-full h-full object-cover" data-alt="A professional headshot of a friendly man with a warm smile, set against a soft blurred outdoor background. The lighting is natural and bright, matching the clean and airy light-mode design system. His expression is confident and supportive, embodying the guardian brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr9TioGF0VpnG2ArpIBtmALEHvrunv_ksMPIwZUOvDjJ7IFPl5CGXUxT6Dbf4xdGl_6gFknIAPhgH-aCqw2QvX4BqNYujQVjvBeSPX7PxPCK4CG1DGIPB_JJSqayVTWzh37foxZgcVv5iJdNONoGwkVFwadZHej8b0LwFShlbVqE4P7vXFOFstN7iADpPUOC3MKZCDXDomtx9QFT0FM4HnhKpYu9qt5iO7cdWS-IrM6aO0Kn1k96bDftYfR0pEwFTnQY2NWcCajuY">
+<img alt="Portrait of the best employee" class="w-full h-full object-cover" data-alt="A professional headshot of a friendly man with a warm smile, set against a soft blurred outdoor background. The lighting is natural and bright, matching the clean and airy light-mode design system. His expression is confident and supportive, embodying the guardian brand identity." src="favicon.svg">
 </div>
 <div>
 <span class="block font-headline-md text-primary">Elena Rossi</span>
@@ -411,7 +422,7 @@
 <div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-margin-desktop gap-md">
 <div>
 <span class="font-headline-md text-headline-md font-bold text-primary"><span style="background-color: rgb(255, 248, 245);">CiccioSheets</span></span>
-<p class="mt-xs text-secondary font-label-md">© 2024 CiccioSheets. All rights reserved. Built for modern teams.</p>
+<p class="mt-xs text-secondary font-label-md">&copy; 2024 CiccioSheets. All rights reserved. Built for modern teams.</p>
 </div>
 <div class="flex flex-wrap justify-center gap-md">
 <a class="text-secondary font-label-md hover:text-primary underline transition-all" href="#">Privacy Policy</a>
@@ -437,4 +448,5 @@
     </script>
 
 
+<script src="js/auth-ui.js"></script>
 </body></html>

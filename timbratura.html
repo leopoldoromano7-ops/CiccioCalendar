@@ -126,24 +126,27 @@
 <script src="js/auth.js"></script>
 <script src="js/timbratura.js"></script>
 <!-- TopAppBar -->
-<header class="w-full top-0 sticky bg-surface z-50">
-<div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-20">
+
+<header class="w-full top-0 sticky z-50 bg-surface h-20 shadow-none">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-margin-desktop h-full">
 <div class="flex items-center gap-sm">
-<img alt="Logo" class="h-10 w-10 object-contain" src="favicon.svg">
+<img alt="CiccioSheets Logo" class="w-10 h-10 object-contain" src="favicon.svg">
 <span class="font-headline-md text-headline-md font-bold text-primary">CiccioSheets</span>
 </div>
-<nav class="hidden md:flex items-center gap-lg font-body-md text-body-md">
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">CALENDAR</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">REPORT</a>
-
-
+<nav class="hidden md:flex items-center gap-lg">
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="index.html">CALENDAR</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="report.html">REPORT</a>
+<a class="font-body-md text-body-md text-primary hover:text-secondary transition-colors" href="timbratura.html">TIMBRA</a>
 </nav>
-<div class="flex items-center gap-md">
-<button class="text-on-surface-variant hover:text-primary font-label-md text-label-md px-sm py-xs">Log In</button>
-<button class="bg-primary-container text-on-primary-fixed font-label-md text-label-md px-lg py-sm rounded-lg active:scale-95 transition-transform">Get Started</button>
+<div class="flex items-center gap-md" id="auth-buttons">
+<a href="login.html" class="hidden md:block font-body-md text-body-md text-primary hover:underline transition-all">Log In</a>
+<a href="register.html" class="bg-primary text-on-primary px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200">
+                    Get Started
+                </a>
 </div>
 </div>
 </header>
+
 <main class="flex-grow max-w-5xl mx-auto w-full px-margin-mobile md:px-margin-desktop py-xl">
 <!-- Live Status Hero Section -->
 <section class="mb-xl">
@@ -176,9 +179,9 @@
 <div class="hidden md:col-span-1 bg-surface-container rounded-xl p-md space-y-md" id="activeDetails">
 <h3 class="font-headline-md text-headline-md text-primary">In Corso</h3>
 <div class="flex items-center gap-sm p-sm bg-white rounded-lg border border-outline-variant/30">
-<img alt="User" class="w-12 h-12 rounded-full object-cover border-2 border-primary-fixed" data-alt="A professional headshot of a smiling young man in a clean, brightly lit modern office setting. He has a warm expression, embodying the friendly and dependable guardian personality. The image has soft, high-key lighting with a minimalist background featuring neutral tones and subtle natural textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmCYjRR1T1oofUftUAn0t5sla0vTyXGAi0s2nrvFsTIwSiQIp5Kzp_G_6nQ2uQPeNbtXcNVHkRDDY1gON21TlwWZY-bN-1i3lqRgNiIGrW_x9WEmGDB95R6b4jz7oNcX8pBkt5h0UyNoMLI81NZvvExZKzq_EK_lwV4s9DoKZjTJthRSYI-drjKQYuvwhVCG0ynxLeXKnRTUDS7nLhRz2rtRz34JnyVhyPzkntRUSfPRrprm18VKnum9KDPAMTfYdOR7RcURnLG3U">
+<img alt="User" class="w-12 h-12 rounded-full object-cover border-2 border-primary-fixed" data-alt="A professional headshot of a smiling young man in a clean, brightly lit modern office setting. He has a warm expression, embodying the friendly and dependable guardian personality. The image has soft, high-key lighting with a minimalist background featuring neutral tones and subtle natural textures." src="favicon.svg">
 <div>
-<p class="font-label-md text-label-md text-primary">Marco Rossi</p>
+<p class="font-label-md text-label-md text-primary" id="activeUserName">Caricamento...</p>
 <p class="text-xs text-secondary italic">Con Ciccio</p>
 </div>
 </div>
@@ -263,7 +266,7 @@
 <a class="hover:text-primary transition-colors" href="#">Support</a>
 <a class="hover:text-primary transition-colors" href="#">Contact</a>
 </div>
-<p class="font-label-md text-label-md text-secondary">© 2024 CiccioSheets. All rights reserved. Built for modern teams.</p>
+<p class="font-label-md text-label-md text-secondary">&copy; 2024 CiccioSheets. All rights reserved. Built for modern teams.</p>
 </div>
 </footer>
 <script disabled>
@@ -364,4 +367,5 @@
     </script>
 
 
+<script src="js/auth-ui.js"></script>
 </body></html>

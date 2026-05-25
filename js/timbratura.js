@@ -163,6 +163,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+
+    async function fetchUserData() {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (user) {
+            const { data: profile } = await window.supabaseClient
+                .from('profiles')
+                .select('full_name')
+                .eq('id', user.id)
+                .single();
+
+            const nameEl = document.getElementById('activeUserName');
+            if (nameEl) nameEl.textContent = profile?.full_name || 'Utente';
+        }
+    }
+    fetchUserData();
+
     fetchActiveSession();
     loadHistory();
 });
