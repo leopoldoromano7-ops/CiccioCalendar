@@ -13,7 +13,7 @@ async function checkAuth() {
 // Global logout function
 window.logout = async () => {
     await window.supabaseClient.auth.signOut();
-    window.location.href = 'landingpage.html';
+    window.location.href = 'index.html';
 };
 
 // Check auth on load

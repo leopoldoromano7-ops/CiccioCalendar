@@ -24,7 +24,7 @@ Un'app per la gestione delle passeggiate di un cane, costruita con HTML statico,
 
 ## Struttura Pagine
 
-- `landingpage.html`: Calendario mensile (Pubblica).
+- `index.html`: Calendario mensile (Pubblica).
 - `report.html`: Statistiche generali (Pubblica).
 - `timbratura.html`: Start/Stop passeggiata in tempo reale (Privata).
 - `crud.html?date=YYYY-MM-DD`: Dettaglio e gestione turni del giorno (Privata).
