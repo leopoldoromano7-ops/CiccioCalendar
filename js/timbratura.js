@@ -16,6 +16,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) return;
 
+        // Fetch user profile name
+        const { data: profile } = await window.supabaseClient
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+
+        if (profile) {
+            const nameEl = document.getElementById('user-display-name');
+            if (nameEl) nameEl.textContent = profile.full_name;
+        }
+
         const { data, error } = await window.supabaseClient
             .from('walk_sessions')
             .select('*')

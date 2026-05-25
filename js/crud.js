@@ -5,12 +5,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateTitle = document.querySelector('h1');
     if (dateTitle) dateTitle.textContent = new Date(selectedDate).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    const shiftList = document.querySelector('.relative.z-10.grid'); // Selector might need tuning
+    const timelineContainer = document.querySelector('.relative.z-10');
     const staffList = document.querySelector('.lg\\:col-span-4 .space-y-md');
     const shiftForm = document.querySelector('#shiftModal form');
+    const totalDurationEl = document.getElementById('total-duration-display');
+    const totalStaffEl = document.getElementById('total-staff-count');
 
     // Load shifts for the day
     async function loadShifts() {
+        if (!window.supabaseClient) return;
+
         const { data, error } = await window.supabaseClient
             .from('walks')
             .select('*, profiles(full_name)')
@@ -19,24 +23,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data) {
             renderTimeline(data);
             renderStaff(data);
+            updateSummary(data);
         }
     }
 
-    function renderTimeline(walks) {
-        // Find the absolute container for shift blocks
-        const timelineContainer = document.querySelector('.relative.z-10');
-        if (!timelineContainer) return;
+    function calculateDuration(startStr, endStr) {
+        if (!startStr || !endStr) return 60; // default 1h
+        const start = new Date(`1970-01-01T${startStr}`);
+        const end = new Date(`1970-01-01T${endStr}`);
+        let diff = (end - start) / 60000;
+        if (diff < 0) diff += 1440;
+        return diff;
+    }
 
-        // Clear existing dynamic blocks
+    function renderTimeline(walks) {
+        if (!timelineContainer) return;
         document.querySelectorAll('.absolute-shift-block').forEach(el => el.remove());
 
         walks.forEach(walk => {
-            const startHour = parseInt(walk.start_time.split(':')[0]);
-            const startMin = parseInt(walk.start_time.split(':')[1]);
-            const endHour = walk.end_time ? parseInt(walk.end_time.split(':')[0]) : startHour + 1;
+            const startParts = walk.start_time.split(':');
+            const startHour = parseInt(startParts[0]);
+            const startMin = parseInt(startParts[1]);
+
+            const duration = calculateDuration(walk.start_time, walk.end_time);
 
             const top = (startHour * 64) + (startMin * 64 / 60);
-            const height = ((endHour - startHour) * 64);
+            const height = (duration * 64 / 60);
 
             const block = document.createElement('div');
             block.className = 'absolute left-[60px] right-0 p-xs absolute-shift-block';
@@ -52,7 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <p class="font-label-sm text-label-sm text-on-surface-variant">${walk.start_time} - ${walk.end_time || '--:--'}</p>
                         </div>
                         <div class="flex gap-2">
-                             <span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity edit-walk" data-id="${walk.id}">edit</span>
                              <span class="material-symbols-outlined text-error opacity-0 group-hover:opacity-100 transition-opacity delete-walk" data-id="${walk.id}">delete</span>
                         </div>
                     </div>
@@ -61,15 +72,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             timelineContainer.appendChild(block);
         });
 
-        // Add event listeners for edit/delete
         document.querySelectorAll('.delete-walk').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                if (confirm('Sicuro di voler eliminare questa passeggiata?')) {
+            btn.onclick = async (e) => {
+                e.stopPropagation();
+                if (confirm('Sicuro di voler eliminare questa attività?')) {
                     const id = e.target.dataset.id;
                     await window.supabaseClient.from('walks').delete().eq('id', id);
                     loadShifts();
                 }
-            });
+            };
         });
     }
 
@@ -91,6 +102,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
             staffList.appendChild(item);
         });
+
+        if (totalStaffEl) totalStaffEl.textContent = `${uniqueStaff.length} Members`;
+    }
+
+    function updateSummary(walks) {
+        let totalMin = 0;
+        walks.forEach(w => totalMin += calculateDuration(w.start_time, w.end_time));
+        if (totalDurationEl) totalDurationEl.textContent = `${Math.floor(totalMin / 60)}h ${totalMin % 60}m`;
     }
 
     // Handle Form Submit
@@ -98,6 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         shiftForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const { data: { user } } = await window.supabaseClient.auth.getUser();
+            if (!user) { alert('Devi essere loggato.'); return; }
 
             const startTime = shiftForm.querySelector('input[type="time"]:first-of-type').value;
             const endTime = shiftForm.querySelector('input[type="time"]:last-of-type').value;
