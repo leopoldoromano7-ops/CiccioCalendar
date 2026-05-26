@@ -48,6 +48,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderMonth(firstDay, lastDay, walks) {
         calendarGrid.innerHTML = '';
         const isMobile = window.innerWidth < 640;
+
+        if (isMobile) {
+            calendarGrid.classList.add('calendar-grid');
+            calendarGrid.classList.remove('flex', 'flex-row', 'gap-px', 'overflow-x-auto', 'snap-x', 'snap-mandatory');
+        }
         const days = isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
         days.forEach(d => {
             const h = document.createElement('div');
@@ -105,13 +110,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderWeek(start, walks) {
         calendarGrid.innerHTML = '';
         const isMobile = window.innerWidth < 640;
+
+        if (isMobile) {
+            calendarGrid.classList.remove('calendar-grid');
+            calendarGrid.className = 'flex flex-row gap-px bg-surface-variant/30 overflow-x-auto snap-x snap-mandatory no-scrollbar';
+            // Ensure parent allows scrolling
+            if (calendarGrid.parentElement && !calendarGrid.parentElement.classList.contains('overflow-x-auto')) {
+                calendarGrid.parentElement.classList.add('overflow-x-auto');
+            }
+        }
+
         const days = isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
-        days.forEach(d => {
-            const h = document.createElement('div');
-            h.className = 'p-1 md:p-md text-center font-label-sm text-on-surface-variant';
-            h.textContent = d;
-            calendarGrid.appendChild(h);
-        });
+
+        if (!isMobile) {
+            days.forEach(d => {
+                const h = document.createElement('div');
+                h.className = 'p-1 md:p-md text-center font-label-sm text-on-surface-variant';
+                h.textContent = d;
+                calendarGrid.appendChild(h);
+            });
+        }
 
         for (let i = 0; i < 7; i++) {
             const d = new Date(start);
@@ -120,21 +138,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dayWalks = walks.filter(w => w.walk_date === dateStr);
 
             const dayCell = document.createElement('div');
-            dayCell.className = 'bg-white min-h-[300px] md:min-h-[400px] p-1 md:p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
+            dayCell.className = isMobile
+                ? 'bg-white min-h-[400px] p-4 border snap-center flex-shrink-0 w-[85%] relative'
+                : 'bg-white min-h-[300px] md:min-h-[400px] p-1 md:p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
             dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
 
             let walksHtml = dayWalks.map(w => `
                 <div class="mt-sm relative bg-surface-container-high p-2 md:p-sm rounded pl-4 md:pl-md overflow-hidden shadow-sm">
                     <div class="shift-accent bg-primary"></div>
-                    <p class="text-sm md:text-base font-bold">${w.start_time} - ${w.end_time || '--'}</p>
+                    <p class="text-sm md:text-base font-bold">${w.start_time} ${w.end_time ? '- ' + w.end_time : ''}</p>
+                    ${w.notes ? `<p class="text-xs text-on-surface-variant truncate">${w.notes}</p>` : ''}
                 </div>
             `).join('');
 
             dayCell.innerHTML = `
                 <div class="flex justify-between items-center mb-md">
-                    <span class="text-label-sm font-bold text-primary">${d.getDate()}</span>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-label-sm text-on-surface-variant uppercase">${days[i]}</span>
+                        <span class="text-xl font-bold text-primary">${d.getDate()}</span>
+                    </div>
                 </div>
-                ${walksHtml}
+                <div class="space-y-2">
+                    ${walksHtml || '<p class="text-sm text-outline-variant italic">Nessuna attività</p>'}
+                </div>
             `;
             calendarGrid.appendChild(dayCell);
         }
@@ -142,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderDay(date, walks) {
         calendarGrid.innerHTML = '';
-        calendarGrid.classList.remove('calendar-grid');
+        calendarGrid.classList.remove('calendar-grid', 'flex', 'flex-row', 'gap-px', 'overflow-x-auto', 'snap-x', 'snap-mandatory');
         calendarGrid.className = 'p-lg space-y-md bg-white';
 
         const dateStr = date.toISOString().split('T')[0];
@@ -228,11 +254,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // UI update
         viewSelector.querySelectorAll('[data-view]').forEach(el => {
-            el.classList.remove('bg-primary', 'text-on-primary');
-            el.classList.add('bg-surface-container', 'text-secondary', 'hover:bg-surface-container-high');
+            el.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+            el.classList.add('text-secondary', 'hover:bg-surface-container-high');
         });
-        target.classList.remove('bg-surface-container', 'text-secondary', 'hover:bg-surface-container-high');
-        target.classList.add('bg-primary', 'text-on-primary');
+        target.classList.remove('text-secondary', 'hover:bg-surface-container-high');
+        target.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
 
         if (currentView !== 'day' && window.calendarCleanup) window.calendarCleanup();
         loadView();
