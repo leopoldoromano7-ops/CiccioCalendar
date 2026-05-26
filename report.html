@@ -124,42 +124,67 @@
 <script src="js/auth.js"></script>
 <script src="js/header.js"></script>
 <script src="js/footer.js"></script>
-<script src="js/services/ollama.js"></script>
+<script src="js/config.js"></script>
+<script src="js/services/ai.js"></script>
 <script src="js/report.js"></script>
 <!-- TopAppBar -->
 <div id="header-container"></div>
 <main class="max-w-7xl mx-auto px-margin-desktop py-xl">
-<!-- AI Report Box -->
-<section id="ai-report-section" class="mb-xl">
-    <div class="bg-surface-container-lowest p-md rounded-xl soft-shadow border border-primary/10 overflow-hidden relative">
-        <div class="flex items-center justify-between mb-md">
+<!-- AI Chatbot Section -->
+<section id="ai-chatbot-section" class="mb-xl">
+    <div class="bg-surface-container-lowest rounded-xl soft-shadow border border-primary/10 overflow-hidden flex flex-col h-[500px] md:h-[600px]">
+        <!-- Chat Header -->
+        <div class="p-md border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
             <div class="flex items-center gap-md">
-                <div class="w-12 h-12 rounded-full bg-surface-container-high p-2 flex items-center justify-center border border-outline-variant">
+                <div class="w-10 h-10 rounded-full bg-white p-1.5 flex items-center justify-center border border-outline-variant">
                     <img src="favicon.svg" alt="Ciccio AI" class="w-full h-full object-contain">
                 </div>
                 <div>
-                    <h2 class="font-headline-md text-primary">AI Report</h2>
-                    <p class="text-on-surface-variant font-label-sm">Analisi intelligente delle passeggiate di Ciccio</p>
+                    <h2 class="font-headline-md text-primary text-lg leading-tight">Chiedi a Ciccio</h2>
+                    <div class="flex items-center gap-xs">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <p class="text-on-surface-variant font-label-sm">Chatbot intelligente attivo</p>
+                    </div>
                 </div>
             </div>
-            <button id="regenerate-ai-report" class="flex items-center gap-xs px-md py-sm rounded-lg border border-outline-variant text-on-surface-variant font-label-md hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                <span class="material-symbols-outlined text-[20px]">refresh</span>
-                Rigenera report AI
+            <button id="generate-ai-report-btn" class="flex items-center gap-xs px-md py-sm rounded-lg bg-primary text-on-primary font-label-md hover:opacity-90 transition-opacity disabled:opacity-50">
+                <span class="material-symbols-outlined text-[20px]">analytics</span>
+                <span class="hidden sm:inline">Genera report</span>
+                <span class="sm:hidden">Report</span>
             </button>
         </div>
 
-        <div id="ai-report-content" class="prose prose-stone max-w-none">
-            <div id="ai-report-loading" class="flex flex-col items-center justify-center py-lg space-y-md">
-                <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-on-surface-variant font-body-md italic text-center">Ciccio sta analizzando i dati...</p>
+        <!-- Messages Area -->
+        <div id="chat-messages" class="flex-grow overflow-y-auto p-md space-y-md bg-background/30">
+            <!-- Welcome Message -->
+            <div class="flex gap-sm">
+                <div class="w-8 h-8 rounded-full bg-surface-container-high p-1.5 flex-shrink-0 border border-outline-variant">
+                    <img src="favicon.svg" alt="Ciccio" class="w-full h-full object-contain">
+                </div>
+                <div class="bg-surface-container-high p-md rounded-2xl rounded-tl-none max-w-[85%] md:max-w-[70%] shadow-sm">
+                    <p class="text-on-surface font-body-md">Ciao! Sono l'assistente di Ciccio. Posso aiutarti a capire chi lo porta fuori più spesso, chi è in servizio oggi o farti un riepilogo della settimana. Cosa vuoi sapere?</p>
+                </div>
             </div>
-            <div id="ai-report-text" class="hidden text-on-surface font-body-md leading-relaxed whitespace-pre-line">
-                <!-- AI Generated Text goes here -->
+        </div>
+
+        <!-- Chat Loading Indicator -->
+        <div id="chat-loading" class="hidden px-md py-sm flex items-center gap-sm bg-background/30">
+            <div class="flex gap-1 px-2">
+                <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
             </div>
-            <div id="ai-report-error" class="hidden flex flex-col items-center justify-center py-lg space-y-md text-center">
-                <span class="material-symbols-outlined text-error text-[48px]">warning</span>
-                <p id="ai-error-message" class="text-error font-body-md"></p>
-            </div>
+            <p class="text-on-surface-variant font-label-sm italic">Ciccio sta analizzando i dati...</p>
+        </div>
+
+        <!-- Chat Input Area -->
+        <div class="p-md border-t border-outline-variant bg-surface-container-lowest">
+            <form id="chat-form" class="flex gap-sm">
+                <input type="text" id="chat-input" placeholder="Chiedimi chi è in servizio oggi..." class="flex-grow bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-xl px-md py-sm font-body-md" autocomplete="off">
+                <button type="submit" id="send-chat-btn" class="w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50">
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </form>
         </div>
     </div>
 </section>

@@ -10,19 +10,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateRangeSpan = document.getElementById('date-range-display');
     const trendingSpan = document.querySelector('.mt-md.flex.items-center.gap-xs.text-secondary .font-label-sm');
     const fasciaFilterContainer = document.getElementById('fascia-filter-container');
-    const aiReportLoading = document.getElementById('ai-report-loading');
-    const aiReportText = document.getElementById('ai-report-text');
-    const aiReportError = document.getElementById('ai-report-error');
-    const aiErrorMessage = document.getElementById('ai-error-message');
-    const regenerateAiBtn = document.getElementById('regenerate-ai-report');
+
+    // Chatbot Elements
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatLoading = document.getElementById('chat-loading');
+    const generateReportBtn = document.getElementById('generate-ai-report-btn');
+    const sendChatBtn = document.getElementById('send-chat-btn');
 
     let currentLimit = 5;
     let allWalks = [];
-    let currentFascia = 'all'; // 'all', 'morning', 'afternoon', 'evening'
+    let last60DaysWalks = [];
+    let activeSessions = [];
+    let currentFascia = 'all';
+    let chatHistory = [];
 
     async function loadReports() {
         if (!window.supabaseClient) return;
 
+        // Recupera tutte le passeggiate per le statistiche generali
         const { data: walks, error } = await window.supabaseClient
             .from('walks')
             .select('*, profiles(full_name)')
@@ -30,90 +37,93 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (walks) {
             allWalks = walks;
+
+            // Filtra per gli ultimi 60 giorni per il contesto AI
+            const sixtyDaysAgo = new Date();
+            sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+            last60DaysWalks = walks.filter(w => new Date(w.walk_date) >= sixtyDaysAgo);
+
+            // Recupera sessioni attive
+            const { data: sessions } = await window.supabaseClient
+                .from('walk_sessions')
+                .select('*, profiles(full_name)')
+                .eq('is_active', true);
+
+            activeSessions = sessions || [];
+
             applyFiltersAndRender();
-            generateAIAnalysis();
         }
     }
 
-    async function generateAIAnalysis() {
-        if (!aiReportText || !window.ollamaService) return;
+    function addMessage(role, text) {
+        const isAI = role === 'ai';
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `flex gap-sm ${isAI ? '' : 'flex-row-reverse'}`;
 
-        // Show loading
-        aiReportLoading.classList.remove('hidden');
-        aiReportText.classList.add('hidden');
-        aiReportError.classList.add('hidden');
-        if (regenerateAiBtn) regenerateAiBtn.disabled = true;
+        const avatar = isAI
+            ? `<div class="w-8 h-8 rounded-full bg-surface-container-high p-1.5 flex-shrink-0 border border-outline-variant">
+                 <img src="favicon.svg" alt="Ciccio" class="w-full h-full object-contain">
+               </div>`
+            : `<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-[10px] font-bold flex-shrink-0">TU</div>`;
+
+        msgDiv.innerHTML = `
+            ${avatar}
+            <div class="${isAI ? 'bg-surface-container-high' : 'bg-primary text-on-primary'} p-md rounded-2xl ${isAI ? 'rounded-tl-none' : 'rounded-tr-none'} max-w-[85%] md:max-w-[70%] shadow-sm">
+                <p class="font-body-md whitespace-pre-line">${text}</p>
+            </div>
+        `;
+
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Mantieni cronologia (max 10 messaggi)
+        chatHistory.push({ role: isAI ? 'assistant' : 'user', content: text });
+        if (chatHistory.length > 10) chatHistory.shift();
+    }
+
+    async function handleChat(e) {
+        e.preventDefault();
+        const question = chatInput.value.trim();
+        if (!question || !window.aiService) return;
+
+        chatInput.value = '';
+        addMessage('user', question);
+
+        chatLoading.classList.remove('hidden');
+        sendChatBtn.disabled = true;
+        if (generateReportBtn) generateReportBtn.disabled = true;
 
         try {
-            const stats = calculateAIStats(allWalks);
-            const report = await window.ollamaService.generateAIReport(stats);
-
-            aiReportText.textContent = report;
-            aiReportText.classList.remove('hidden');
+            const dataContext = { walks: last60DaysWalks, activeSessions: activeSessions };
+            const answer = await window.aiService.askAI(question, dataContext, chatHistory);
+            addMessage('ai', answer);
         } catch (error) {
-            aiErrorMessage.textContent = error.message || 'Errore imprevisto nella generazione del report.';
-            aiReportError.classList.remove('hidden');
+            addMessage('ai', "Ops! " + error.message);
         } finally {
-            aiReportLoading.classList.add('hidden');
-            if (regenerateAiBtn) regenerateAiBtn.disabled = false;
+            chatLoading.classList.add('hidden');
+            sendChatBtn.disabled = false;
+            if (generateReportBtn) generateReportBtn.disabled = false;
         }
     }
 
-    function calculateAIStats(walks) {
-        if (!walks || walks.length === 0) return { error: "Nessun dato disponibile." };
+    async function handleGenerateReport() {
+        if (!window.aiService) return;
 
-        const now = new Date();
-        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        chatLoading.classList.remove('hidden');
+        if (generateReportBtn) generateReportBtn.disabled = true;
+        sendChatBtn.disabled = true;
 
-        const currentWeekWalks = walks.filter(w => new Date(w.walk_date) >= oneWeekAgo);
-        const previousWeekWalks = walks.filter(w => {
-            const d = new Date(w.walk_date);
-            return d >= twoWeeksAgo && d < oneWeekAgo;
-        });
-
-        const getSummary = (data) => {
-            const caregiverStats = {};
-            let totalMinutes = 0;
-            const fasciaStats = { morning: 0, afternoon: 0, evening: 0 };
-            const dayStats = {};
-
-            data.forEach(w => {
-                const duration = calculateDuration(w.start_time, w.end_time);
-                totalMinutes += duration;
-
-                const name = w.profiles?.full_name || 'Utente';
-                if (!caregiverStats[name]) caregiverStats[name] = { count: 0, minutes: 0 };
-                caregiverStats[name].count++;
-                caregiverStats[name].minutes += duration;
-
-                const hour = parseInt(w.start_time.split(':')[0]);
-                if (hour < 12) fasciaStats.morning++;
-                else if (hour < 18) fasciaStats.afternoon++;
-                else fasciaStats.evening++;
-
-                const day = new Date(w.walk_date).toLocaleDateString('it-IT', { weekday: 'long' });
-                dayStats[day] = (dayStats[day] || 0) + 1;
-            });
-
-            return {
-                total_walks: data.length,
-                total_hours: (totalMinutes / 60).toFixed(1),
-                caregivers: Object.entries(caregiverStats).map(([name, s]) => ({
-                    nome: name,
-                    uscite: s.count,
-                    ore: (s.minutes / 60).toFixed(1)
-                })).sort((a, b) => b.uscite - a.uscite),
-                fasce_orarie: fasciaStats,
-                giorni_piu_attivi: Object.entries(dayStats).sort((a, b) => b[1] - a[1]).slice(0, 3)
-            };
-        };
-
-        return {
-            periodo_corrente: getSummary(currentWeekWalks),
-            periodo_precedente: getSummary(previousWeekWalks),
-            nota: "Il periodo corrente si riferisce agli ultimi 7 giorni. Il periodo precedente ai 7 giorni ancora prima."
-        };
+        try {
+            const dataContext = { walks: last60DaysWalks, activeSessions: activeSessions };
+            const report = await window.aiService.generateAIReport(dataContext);
+            addMessage('ai', report);
+        } catch (error) {
+            addMessage('ai', "Errore nella generazione del report: " + error.message);
+        } finally {
+            chatLoading.classList.add('hidden');
+            if (generateReportBtn) generateReportBtn.disabled = false;
+            sendChatBtn.disabled = false;
+        }
     }
 
     function applyFiltersAndRender() {
@@ -386,8 +396,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    if (regenerateAiBtn) {
-        regenerateAiBtn.onclick = () => generateAIAnalysis();
+    if (chatForm) {
+        chatForm.onsubmit = handleChat;
+    }
+
+    if (generateReportBtn) {
+        generateReportBtn.onclick = handleGenerateReport;
     }
 
     if (fasciaFilterContainer) {
