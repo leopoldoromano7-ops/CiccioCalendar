@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const days = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
         days.forEach(d => {
             const h = document.createElement('div');
-            h.className = 'p-md text-center font-label-sm text-on-surface-variant';
+            h.className = 'p-1 md:p-md text-center font-label-sm text-on-surface-variant';
             h.textContent = d;
             calendarGrid.appendChild(h);
         });
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         for (let i = 0; i < startDay; i++) {
             const empty = document.createElement('div');
-            empty.className = 'bg-white min-h-[140px] p-sm opacity-20';
+            empty.className = 'bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm opacity-20';
             calendarGrid.appendChild(empty);
         }
 
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dayWalks = walks.filter(w => w.walk_date === dateStr);
 
             const dayCell = document.createElement('div');
-            dayCell.className = 'bg-white min-h-[140px] p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
+            dayCell.className = 'bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
             dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
 
             let walksHtml = dayWalks.map(w => `
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const days = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
         days.forEach(d => {
             const h = document.createElement('div');
-            h.className = 'p-md text-center font-label-sm text-on-surface-variant';
+            h.className = 'p-1 md:p-md text-center font-label-sm text-on-surface-variant';
             h.textContent = d;
             calendarGrid.appendChild(h);
         });
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dayWalks = walks.filter(w => w.walk_date === dateStr);
 
             const dayCell = document.createElement('div');
-            dayCell.className = 'bg-white min-h-[400px] p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
+            dayCell.className = 'bg-white min-h-[300px] md:min-h-[400px] p-1 md:p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
             dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
 
             let walksHtml = dayWalks.map(w => `
@@ -172,6 +172,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Re-add class after render if we switch back
         const cleanup = () => {
              calendarGrid.className = 'calendar-grid p-xs bg-surface-variant/30';
+             if (!calendarGrid.parentElement.classList.contains('overflow-x-auto')) {
+                 const wrapper = document.createElement('div');
+                 wrapper.className = 'overflow-x-auto';
+                 calendarGrid.parentNode.insertBefore(wrapper, calendarGrid);
+                 wrapper.appendChild(calendarGrid);
+             }
         };
         window.calendarCleanup = cleanup;
     }

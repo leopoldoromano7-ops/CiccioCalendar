@@ -110,9 +110,14 @@
         }
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 1px;
             background-color: #ece0d8; /* Secondary Tan lines */
+        }
+        @media (max-width: 640px) {
+            .calendar-grid {
+                grid-template-columns: repeat(7, minmax(40px, 1fr));
+            }
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.8);
@@ -184,23 +189,24 @@
 </div>
 </div>
 <!-- Calendar Content -->
+<div class="overflow-x-auto">
 <div class="calendar-grid p-xs bg-surface-variant/30">
 <!-- Weekdays -->
-<div class="p-md text-center font-label-sm text-on-surface-variant">LUN</div>
-<div class="p-md text-center font-label-sm text-on-surface-variant">MAR</div>
-<div class="p-md text-center font-label-sm text-on-surface-variant">MER</div>
-<div class="p-md text-center font-label-sm text-on-surface-variant">GIO</div>
-<div class="p-md text-center font-label-sm text-on-surface-variant">VEN</div>
-<div class="p-md text-center font-label-sm text-on-surface-variant">SAB</div>
-<div class="p-md text-center font-label-sm text-on-surface-variant">DOM</div>
+<div class="p-1 md:p-md text-center font-label-sm text-on-surface-variant">LUN</div>
+<div class="p-1 md:p-md text-center font-label-sm text-on-surface-variant">MAR</div>
+<div class="p-1 md:p-md text-center font-label-sm text-on-surface-variant">MER</div>
+<div class="p-1 md:p-md text-center font-label-sm text-on-surface-variant">GIO</div>
+<div class="p-1 md:p-md text-center font-label-sm text-on-surface-variant">VEN</div>
+<div class="p-1 md:p-md text-center font-label-sm text-on-surface-variant">SAB</div>
+<div class="p-1 md:p-md text-center font-label-sm text-on-surface-variant">DOM</div>
 
 <!-- September 2026 trailing days -->
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant/30">28</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant/30">29</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant/30">30</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant/30">28</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant/30">29</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant/30">30</span></div>
 
 <!-- October 2026 starts here -->
-<div class="bg-white min-h-[140px] p-sm border-2 border-secondary/20 bg-surface/50">
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm border-2 border-secondary/20 bg-surface/50">
     <span class="text-label-sm font-bold text-primary">01</span>
     <div class="mt-xs relative bg-surface-container-high p-xs rounded pl-md overflow-hidden hover:scale-[1.01] transition-transform cursor-pointer">
         <div class="shift-accent bg-primary"></div>
@@ -208,40 +214,40 @@
         <p class="text-[9px] text-on-surface-variant">20:00 - 02:00</p>
     </div>
 </div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">02</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">03</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">04</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">02</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">03</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">04</span></div>
 
 <!-- Week 2 -->
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">05</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">06</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">07</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">08</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">09</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">10</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">11</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">05</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">06</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">07</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">08</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">09</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">10</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">11</span></div>
 
 <!-- Week 3 -->
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">12</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">13</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">14</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">15</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">16</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">17</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">18</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">12</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">13</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">14</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">15</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">16</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">17</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">18</span></div>
 
 <!-- Week 4 -->
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">19</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">20</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">21</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">22</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">23</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">24</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">25</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">19</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">20</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">21</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">22</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">23</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">24</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">25</span></div>
 
 <!-- Week 5 -->
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">26</span></div>
-<div class="bg-white min-h-[140px] p-sm">
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">26</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm">
     <span class="text-label-sm text-outline-variant">27</span>
     <div class="mt-xs relative bg-surface-container-low p-xs rounded pl-md overflow-hidden hover:scale-[1.01] transition-transform cursor-pointer">
         <div class="shift-accent bg-secondary"></div>
@@ -249,8 +255,8 @@
         <p class="text-[9px] text-on-surface-variant">08:00 - 14:00</p>
     </div>
 </div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">28</span></div>
-<div class="bg-white min-h-[140px] p-sm">
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">28</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm">
     <span class="text-label-sm text-outline-variant">29</span>
     <div class="mt-xs relative bg-surface-container-high p-xs rounded pl-md overflow-hidden hover:scale-[1.01] transition-transform cursor-pointer">
         <div class="shift-accent bg-primary"></div>
@@ -258,9 +264,10 @@
         <p class="text-[9px] text-on-surface-variant">14:00 - 20:00</p>
     </div>
 </div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">30</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant">31</span></div>
-<div class="bg-white min-h-[140px] p-sm"><span class="text-label-sm text-outline-variant/30">01 NOV</span></div></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">30</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant">31</span></div>
+<div class="bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm"><span class="text-label-sm text-outline-variant/30">01 NOV</span></div></div>
+</div>
 </div>
 <!-- Decorative elements behind mockup -->
 <div class="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-full bg-radial-gradient from-surface-container-highest to-transparent opacity-30"></div>
