@@ -2,8 +2,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const selectedDate = urlParams.get('date') || new Date().toISOString().split('T')[0];
 
+    // Parsing sicuro senza shift UTC
+    const [y, mon, d] = selectedDate.split('-').map(Number);
+    const displayDate = new Date(y, mon - 1, d);
+
     const dateTitle = document.querySelector('h1');
-    if (dateTitle) dateTitle.textContent = new Date(selectedDate).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (dateTitle) dateTitle.textContent = displayDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     const timelineContainer = document.getElementById('timeline-grid');
     const mobileListView = document.getElementById('mobile-list-view');
@@ -69,7 +73,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         walks.sort((a,b) => a.start_time.localeCompare(b.start_time)).forEach(walk => {
             const isOwner = currentUser && walk.assigned_user_id === currentUser.id;
             const card = document.createElement('div');
-            card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant shadow-sm';
+            card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant shadow-sm cursor-pointer hover:border-primary/30 transition-all';
+            card.onclick = () => window.openDetailModal(walk.id);
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-sm">
                     <div class="flex items-center gap-sm">
@@ -78,38 +83,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                         <p class="font-label-md text-primary">${walk.profiles?.full_name || 'Utente'}</p>
                     </div>
-                    ${isOwner ? `<button class="material-symbols-outlined text-error delete-walk" data-id="${walk.id}">delete</button>` : ''}
+                    ${isOwner ? `<span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold">MIA</span>` : ''}
                 </div>
                 <div class="flex items-center gap-md">
                     <div class="flex items-center gap-xs text-secondary">
                         <span class="material-symbols-outlined text-[18px]">schedule</span>
-                        <span class="font-label-sm">${walk.start_time} - ${walk.end_time}</span>
+                        <span class="font-label-sm">${walk.start_time.substring(0,5)} - ${walk.end_time?.substring(0,5)}</span>
                     </div>
                     <div class="flex-grow">
-                         <p class="font-body-md text-on-surface">${walk.notes || 'Passeggiata'}</p>
+                         <p class="font-body-md text-on-surface truncate">${walk.notes || 'Attività'}</p>
                     </div>
                 </div>
             `;
             mobileListView.appendChild(card);
         });
-
-        document.querySelectorAll('.delete-walk').forEach(btn => {
-            btn.onclick = async (e) => {
-                e.stopPropagation();
-                if (confirm('Sicuro di voler eliminare questa attività?')) {
-                    const id = e.target.dataset.id;
-                    await window.supabaseClient.from('walks').delete().eq('id', id);
-                    loadShifts();
-                }
-            };
-        });
     }
 
     function calculateDuration(startStr, endStr) {
-        if (!startStr || !endStr) return 60; // default 1h
-        const start = new Date(`1970-01-01T${startStr}`);
-        const end = new Date(`1970-01-01T${endStr}`);
-        let diff = (end - start) / 60000;
+        if (!startStr || !endStr) return 60;
+        const [h1, m1] = startStr.split(':').map(Number);
+        const [h2, m2] = endStr.split(':').map(Number);
+        const start = h1 * 60 + m1;
+        const end = h2 * 60 + m2;
+        let diff = end - start;
         if (diff < 0) diff += 1440;
         return diff;
     }
@@ -119,17 +115,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.absolute-shift-block').forEach(el => el.remove());
 
         walks.forEach(walk => {
-            const startParts = walk.start_time.split(':');
-            const startHour = parseInt(startParts[0]);
-            const startMin = parseInt(startParts[1]);
-
+            const [startH, startM] = walk.start_time.split(':').map(Number);
             const duration = calculateDuration(walk.start_time, walk.end_time);
 
-            const top = (startHour * 64) + (startMin * 64 / 60);
-            const height = (duration * 64 / 60);
+            const top = (startH * 64) + (startM * 64 / 60);
+            const height = Math.max(32, (duration * 64 / 60)); // Min height for visibility
 
             const block = document.createElement('div');
-            block.className = 'absolute left-[60px] right-0 p-xs absolute-shift-block';
+            block.className = 'absolute left-[60px] right-0 px-2 py-1 absolute-shift-block';
             block.style.top = `${top}px`;
             block.style.height = `${height}px`;
             block.style.zIndex = '20';
@@ -137,15 +130,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isOwner = currentUser && walk.assigned_user_id === currentUser.id;
 
             block.innerHTML = `
-                <div class="w-full h-full bg-surface-container-high rounded-lg border-l-4 border-secondary p-sm shadow-sm hover:scale-[1.01] transition-all cursor-pointer group relative overflow-hidden ${isOwner ? 'draggable' : ''}"
-                     ${isOwner ? `draggable="true" data-id="${walk.id}"` : ''}>
-                    <div class="flex justify-between items-start">
-                        <div class="pointer-events-none">
-                            <p class="font-label-md text-label-md text-primary truncate">${walk.profiles?.full_name || 'Turno'}</p>
-                            <p class="font-label-sm text-label-sm text-on-surface-variant">${walk.start_time} - ${walk.end_time || '--:--'}</p>
-                        </div>
-                        <div class="flex gap-2">
-                             ${isOwner ? `<span class="material-symbols-outlined text-error opacity-0 group-hover:opacity-100 transition-opacity delete-walk" data-id="${walk.id}">delete</span>` : ''}
+                <div class="w-full h-full bg-surface-container-high rounded-lg border-l-4 border-secondary p-2 shadow-sm hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer group relative overflow-hidden ${isOwner ? 'draggable' : ''}"
+                     ${isOwner ? `draggable="true" data-id="${walk.id}"` : ''} onclick="openDetailModal('${walk.id}')">
+                    <div class="flex justify-between items-start h-full">
+                        <div class="flex flex-col h-full justify-between min-w-0">
+                            <div>
+                                <p class="font-label-md text-primary font-bold truncate leading-tight">${walk.profiles?.full_name || 'Utente'}</p>
+                                <p class="font-label-sm text-on-surface-variant text-[11px]">${walk.start_time.substring(0,5)} - ${walk.end_time?.substring(0,5)}</p>
+                            </div>
+                            <p class="font-body-md text-on-surface-variant text-[10px] truncate ${height < 50 ? 'hidden' : ''}">${walk.notes || ''}</p>
                         </div>
                     </div>
                 </div>
@@ -154,17 +147,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         setupDragAndDrop();
-
-        document.querySelectorAll('.delete-walk').forEach(btn => {
-            btn.onclick = async (e) => {
-                e.stopPropagation();
-                if (confirm('Sicuro di voler eliminare questa attività?')) {
-                    const id = e.target.dataset.id;
-                    await window.supabaseClient.from('walks').delete().eq('id', id);
-                    loadShifts();
-                }
-            };
-        });
     }
 
     function setupDragAndDrop() {
@@ -214,13 +196,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function openModalWithTime(time) {
         if (!window.openModal) return;
-        window.openModal();
-        const inputs = shiftForm.querySelectorAll('input[type="time"]');
+
+        // Reset modal to "New" state
+        shiftForm.reset();
+        delete shiftForm.dataset.id;
+        const modalTitle = document.querySelector('#shiftModal h2');
+        const submitBtn = shiftForm.querySelector('button[type="submit"]');
+        const deleteBtn = document.getElementById('modal-delete-btn');
+        const detailInfo = document.getElementById('modal-detail-info');
+
+        modalTitle.textContent = 'Nuova Attività';
+        submitBtn.textContent = 'Salva Attività';
+        submitBtn.classList.remove('hidden');
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+        if (detailInfo) detailInfo.innerHTML = '';
+
+        const inputs = shiftForm.querySelectorAll('input');
+        inputs.forEach(i => i.readOnly = false);
+
         inputs[0].value = time;
         // Default 1 hour later
         const h = parseInt(time.split(':')[0]);
         const nextH = (h + 1) % 24;
         inputs[1].value = `${nextH < 10 ? '0'+nextH : nextH}:00`;
+
+        window.openModal();
     }
 
     function renderStaff(walks) {
@@ -294,25 +294,117 @@ document.addEventListener('DOMContentLoaded', async () => {
             const startTime = shiftForm.querySelector('input[type="time"]:first-of-type').value;
             const endTime = shiftForm.querySelector('input[type="time"]:last-of-type').value;
             const notes = shiftForm.querySelector('#shift-notes')?.value || 'Passeggiata';
+            const walkId = shiftForm.dataset.id;
 
-            const { error } = await window.supabaseClient
-                .from('walks')
-                .insert([{
-                    walk_date: selectedDate,
-                    start_time: startTime,
-                    end_time: endTime,
-                    assigned_user_id: user.id,
-                    notes: notes
-                }]);
+            if (walkId) {
+                // Update existing
+                const { error } = await window.supabaseClient
+                    .from('walks')
+                    .update({
+                        start_time: startTime,
+                        end_time: endTime,
+                        notes: notes
+                    })
+                    .eq('id', walkId);
 
-            if (error) {
-                alert('Errore: ' + error.message);
+                if (error) alert('Errore update: ' + error.message);
             } else {
-                window.closeModal();
-                loadShifts();
+                // Insert new
+                const { error } = await window.supabaseClient
+                    .from('walks')
+                    .insert([{
+                        walk_date: selectedDate,
+                        start_time: startTime,
+                        end_time: endTime,
+                        assigned_user_id: user.id,
+                        notes: notes
+                    }]);
+
+                if (error) alert('Errore insert: ' + error.message);
             }
+
+            window.closeModal();
+            loadShifts();
         });
     }
+
+    window.openDetailModal = (id) => {
+        const walk = allShifts.find(w => w.id == id);
+        if (!walk) return;
+
+        const isOwner = currentUser && walk.assigned_user_id === currentUser.id;
+
+        // Reset modal state
+        shiftForm.reset();
+        shiftForm.dataset.id = id;
+
+        const modalTitle = document.querySelector('#shiftModal h2');
+        const submitBtn = shiftForm.querySelector('button[type="submit"]');
+        const deleteBtn = document.getElementById('modal-delete-btn');
+
+        if (isOwner) {
+            modalTitle.textContent = 'Modifica Attività';
+            submitBtn.textContent = 'Salva Modifiche';
+            submitBtn.classList.remove('hidden');
+            if (deleteBtn) deleteBtn.classList.remove('hidden');
+        } else {
+            modalTitle.textContent = 'Dettaglio Attività';
+            submitBtn.classList.add('hidden');
+            if (deleteBtn) deleteBtn.classList.add('hidden');
+        }
+
+        // Fill data
+        const inputs = shiftForm.querySelectorAll('input');
+        inputs[0].value = walk.start_time.substring(0, 5);
+        inputs[1].value = walk.end_time?.substring(0, 5) || '';
+        inputs[2].value = walk.notes || '';
+
+        // Read-only if not owner
+        inputs.forEach(i => i.readOnly = !isOwner);
+
+        // Add extra info for detail view
+        let detailInfo = document.getElementById('modal-detail-info');
+        if (!detailInfo) {
+            detailInfo = document.createElement('div');
+            detailInfo.id = 'modal-detail-info';
+            detailInfo.className = 'mt-4 pt-4 border-t border-outline-variant text-sm space-y-1';
+            shiftForm.insertBefore(detailInfo, shiftForm.querySelector('.pt-md'));
+        }
+
+        const duration = calculateDuration(walk.start_time, walk.end_time);
+        const [y, mon, d] = walk.walk_date.split('-').map(Number);
+        const dateObj = new Date(y, mon-1, d);
+
+        detailInfo.innerHTML = `
+            <div class="flex justify-between"><span class="text-on-surface-variant">Accompagnatore:</span> <span class="font-bold">${walk.profiles?.full_name}</span></div>
+            <div class="flex justify-between"><span class="text-on-surface-variant">Data:</span> <span>${dateObj.toLocaleDateString('it-IT')}</span></div>
+            <div class="flex justify-between"><span class="text-on-surface-variant">Durata:</span> <span>${duration} minuti</span></div>
+        `;
+
+        window.openModal();
+    };
+
+    // Add Delete button to modal if it doesn't exist
+    function ensureModalDeleteBtn() {
+        const footer = document.querySelector('#shiftModal .pt-md');
+        if (footer && !document.getElementById('modal-delete-btn')) {
+            const delBtn = document.createElement('button');
+            delBtn.id = 'modal-delete-btn';
+            delBtn.type = 'button';
+            delBtn.className = 'w-full bg-error/10 text-error py-sm rounded-lg font-label-md text-label-md hover:bg-error/20 transition-colors mt-2 hidden';
+            delBtn.textContent = 'Elimina Prenotazione';
+            delBtn.onclick = async () => {
+                if (confirm('Sicuro di voler eliminare questa attività?')) {
+                    const id = shiftForm.dataset.id;
+                    await window.supabaseClient.from('walks').delete().eq('id', id);
+                    window.closeModal();
+                    loadShifts();
+                }
+            };
+            footer.appendChild(delBtn);
+        }
+    }
+    ensureModalDeleteBtn();
 
     window.addEventListener('resize', () => {
         renderAll();
