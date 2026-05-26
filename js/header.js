@@ -65,7 +65,7 @@ async function renderHeader() {
                     <button onclick="window.logout()" class="hidden md:block bg-secondary text-on-secondary px-md py-sm rounded-lg font-label-md text-label-md active:scale-95 duration-200 transition-all">Logout</button>
                 ` : `
                     <a href="login.html" class="font-label-md text-label-md text-primary hover:underline transition-all px-2">Log In</a>
-                    <a href="register.html" class="bg-primary text-on-primary px-3 md:px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200 whitespace-nowrap">
+                    <a href="register.html" class="hidden md:block bg-primary text-on-primary px-3 md:px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200 whitespace-nowrap">
                         Get Started
                     </a>
                 `}
@@ -104,7 +104,7 @@ async function renderHeader() {
                             </a>
                             <a href="timbratura.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container text-primary transition-colors">
                                 <span class="material-symbols-outlined">timer</span>
-                                <span class="font-label-md">TIMBRA</span>
+                                <span class="font-label-md">Timbrature</span>
                             </a>
                         </nav>
                     </div>

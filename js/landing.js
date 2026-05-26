@@ -73,9 +73,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
 
             let walksHtml = dayWalks.map(w => `
-                <div class="mt-xs relative bg-surface-container-high p-xs rounded pl-md overflow-hidden">
+                <div class="mt-xs relative bg-surface-container-high p-1 md:p-xs rounded pl-3 md:pl-md overflow-hidden">
                     <div class="shift-accent bg-primary"></div>
-                    <p class="text-[10px] font-bold leading-tight">${w.start_time}</p>
+                    <p class="text-[11px] md:text-[12px] font-bold leading-tight">${w.start_time}</p>
                 </div>
             `).join('');
 
@@ -112,9 +112,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
 
             let walksHtml = dayWalks.map(w => `
-                <div class="mt-sm relative bg-surface-container-high p-sm rounded pl-md overflow-hidden shadow-sm">
+                <div class="mt-sm relative bg-surface-container-high p-2 md:p-sm rounded pl-4 md:pl-md overflow-hidden shadow-sm">
                     <div class="shift-accent bg-primary"></div>
-                    <p class="text-xs font-bold">${w.start_time} - ${w.end_time || '--'}</p>
+                    <p class="text-sm md:text-base font-bold">${w.start_time} - ${w.end_time || '--'}</p>
                 </div>
             `).join('');
 
