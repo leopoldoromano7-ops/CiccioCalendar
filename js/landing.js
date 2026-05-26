@@ -47,7 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderMonth(firstDay, lastDay, walks) {
         calendarGrid.innerHTML = '';
-        const days = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
+        const isMobile = window.innerWidth < 640;
+        const days = isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
         days.forEach(d => {
             const h = document.createElement('div');
             h.className = 'p-1 md:p-md text-center font-label-sm text-on-surface-variant';
@@ -72,17 +73,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             dayCell.className = 'bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
             dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
 
-            let walksHtml = dayWalks.map(w => `
-                <div class="mt-xs relative bg-surface-container-high p-1 md:p-xs rounded pl-3 md:pl-md overflow-hidden">
-                    <div class="shift-accent bg-primary"></div>
-                    <p class="text-[11px] md:text-[12px] font-bold leading-tight">${w.start_time}</p>
-                </div>
-            `).join('');
+            let walksHtml = '';
+            if (isMobile) {
+                // Show dots or thin bars for mobile
+                walksHtml = dayWalks.length > 0 ? `
+                    <div class="flex flex-wrap gap-0.5 mt-1 justify-center">
+                        ${dayWalks.map(() => `<div class="w-1.5 h-1.5 rounded-full bg-primary"></div>`).join('')}
+                    </div>
+                ` : '';
+            } else {
+                walksHtml = dayWalks.map(w => `
+                    <div class="mt-xs relative bg-surface-container-high p-xs rounded pl-md overflow-hidden">
+                        <div class="shift-accent bg-primary"></div>
+                        <p class="text-[12px] font-bold leading-tight">${w.start_time}</p>
+                    </div>
+                `).join('');
+            }
 
             dayCell.innerHTML = `
-                <div class="flex flex-col h-full">
-                    <span class="text-label-sm ${dateStr === new Date().toISOString().split('T')[0] ? 'font-bold text-primary underline' : 'text-outline-variant'}">${String(day).padStart(2, '0')}</span>
-                    <div class="flex-grow overflow-hidden">
+                <div class="flex flex-col h-full items-center md:items-start">
+                    <span class="text-[10px] md:text-label-sm ${dateStr === new Date().toISOString().split('T')[0] ? 'font-bold text-primary underline' : 'text-outline-variant'}">${String(day).padStart(2, '0')}</span>
+                    <div class="flex-grow overflow-hidden w-full">
                         ${walksHtml}
                     </div>
                 </div>
@@ -93,7 +104,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderWeek(start, walks) {
         calendarGrid.innerHTML = '';
-        const days = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
+        const isMobile = window.innerWidth < 640;
+        const days = isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
         days.forEach(d => {
             const h = document.createElement('div');
             h.className = 'p-1 md:p-md text-center font-label-sm text-on-surface-variant';
