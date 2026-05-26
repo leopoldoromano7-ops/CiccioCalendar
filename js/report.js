@@ -225,15 +225,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const chartContainer = document.querySelector('.h-\\[280px\\].flex.items-end');
         if (!chartContainer) return;
 
-        // Reset data: 7 days, Morning (0) and Afternoon (1)
+        // Reset data: 7 days, Morning, Afternoon, Evening
         const weeklyData = [
-            { morning: 0, afternoon: 0 }, // Lun
-            { morning: 0, afternoon: 0 }, // Mar
-            { morning: 0, afternoon: 0 }, // Mer
-            { morning: 0, afternoon: 0 }, // Gio
-            { morning: 0, afternoon: 0 }, // Ven
-            { morning: 0, afternoon: 0 }, // Sab
-            { morning: 0, afternoon: 0 }  // Dom
+            { morning: 0, afternoon: 0, evening: 0 }, // Lun
+            { morning: 0, afternoon: 0, evening: 0 }, // Mar
+            { morning: 0, afternoon: 0, evening: 0 }, // Mer
+            { morning: 0, afternoon: 0, evening: 0 }, // Gio
+            { morning: 0, afternoon: 0, evening: 0 }, // Ven
+            { morning: 0, afternoon: 0, evening: 0 }, // Sab
+            { morning: 0, afternoon: 0, evening: 0 }  // Dom
         ];
 
         walks.forEach(w => {
@@ -242,21 +242,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (dayIndex === -1) dayIndex = 6; // Sunday
 
             const hour = parseInt(w.start_time.split(':')[0]);
-            if (hour < 14) {
+            if (hour < 12) {
                 weeklyData[dayIndex].morning++;
-            } else {
+            } else if (hour < 18) {
                 weeklyData[dayIndex].afternoon++;
+            } else {
+                weeklyData[dayIndex].evening++;
             }
         });
 
-        const maxCount = Math.max(...weeklyData.flatMap(d => [d.morning, d.afternoon]), 1);
+        const maxCount = Math.max(...weeklyData.flatMap(d => [d.morning, d.afternoon, d.evening]), 1);
         const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
         chartContainer.innerHTML = weeklyData.map((data, i) => `
             <div class="flex flex-col items-center gap-sm group h-full justify-end">
                 <div class="flex gap-1 items-end h-full">
-                    <div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.morning / maxCount * 90) + 5}%"></div>
-                    <div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.afternoon / maxCount * 90) + 5}%"></div>
+                    <div class="w-6 md:w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.morning / maxCount * 90) + 5}%" title="Mattina: ${data.morning}"></div>
+                    <div class="w-6 md:w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.afternoon / maxCount * 90) + 5}%" title="Pomeriggio: ${data.afternoon}"></div>
+                    <div class="w-6 md:w-8 bg-tertiary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.evening / maxCount * 90) + 5}%" title="Sera: ${data.evening}"></div>
                 </div>
                 <span class="font-label-sm text-on-surface-variant">${dayLabels[i]}</span>
             </div>
