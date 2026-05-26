@@ -62,9 +62,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function calculateAIStats(walks) {
         if (!walks || walks.length === 0) return { error: "Nessun dato disponibile." };
 
+        // Normalizza le date a inizio giornata per confronti precisi
         const now = new Date();
-        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const oneWeekAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const twoWeeksAgo = new Date(todayStart.getTime() - 14 * 24 * 60 * 60 * 1000);
 
         const currentWeekWalks = walks.filter(w => new Date(w.walk_date) >= oneWeekAgo);
         const previousWeekWalks = walks.filter(w => {

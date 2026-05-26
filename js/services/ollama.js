@@ -27,6 +27,8 @@ Dati:
 ${JSON.stringify(data, null, 2)}`;
 
     try {
+        console.log('Chiamata a Ollama:', { endpoint: OLLAMA_ENDPOINT, model: MODEL_NAME });
+
         const response = await fetch(OLLAMA_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -40,14 +42,27 @@ ${JSON.stringify(data, null, 2)}`;
         });
 
         if (!response.ok) {
-            throw new Error('Errore nella risposta di Ollama');
+            const errorText = await response.text();
+            console.error('Risposta Ollama non valida:', response.status, errorText);
+            throw new Error(`Errore Ollama (${response.status}): ${errorText || 'Risposta non valida'}`);
         }
 
         const result = await response.json();
+        if (!result || !result.response) {
+            console.error('Risposta Ollama vuota o malformata:', result);
+            throw new Error('Risposta Ollama malformata.');
+        }
+
         return result.response;
     } catch (error) {
         console.error('Errore durante la generazione del report AI:', error);
-        throw new Error('AI locale non disponibile. Avvia Ollama per generare il report.');
+
+        // Messaggio specifico per errori di connessione (possibile CORS o Ollama non avviato)
+        if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            throw new Error('Impossibile connettersi a Ollama. Verifica che sia attivo e configurato con OLLAMA_ORIGINS="*"');
+        }
+
+        throw new Error(`AI locale non disponibile: ${error.message}`);
     }
 }
 
