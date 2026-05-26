@@ -177,14 +177,21 @@
 <button class="p-xs hover:bg-surface-container rounded-full transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
 </div>
 </div>
-<div class="flex gap-2 md:gap-sm bg-surface-container p-1 rounded-full" id="view-selector">
+<div class="hidden md:flex gap-2 md:gap-sm bg-surface-container p-1 rounded-full view-selector-container">
     <button data-view="day" class="whitespace-nowrap px-4 md:px-md py-2 md:py-xs rounded-full text-sm md:text-label-md font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors">Giorno</button>
     <button data-view="week" class="whitespace-nowrap px-4 md:px-md py-2 md:py-xs rounded-full text-sm md:text-label-md font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors">Settimana</button>
-    <button data-view="month" class="whitespace-nowrap bg-primary text-on-primary px-4 md:px-md py-2 md:py-xs rounded-full text-sm md:text-label-md font-label-md cursor-pointer shadow-sm">Mese</button>
+    <button data-view="month" class="whitespace-nowrap bg-primary text-on-primary px-4 md:px-md py-2 md:py-xs rounded-full text-sm md:text-label-md font-label-md cursor-pointer shadow-sm transition-colors">Mese</button>
 </div>
 </div>
 <!-- Calendar Content -->
 <div class="overflow-x-auto">
+<div class="flex md:hidden justify-center p-sm border-b border-surface-variant bg-surface-container/50 view-selector-container">
+    <div class="flex gap-2 bg-surface-container p-1 rounded-full">
+        <button data-view="day" class="whitespace-nowrap px-4 py-2 rounded-full text-sm font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors">Giorno</button>
+        <button data-view="week" class="whitespace-nowrap px-4 py-2 rounded-full text-sm font-label-md text-secondary cursor-pointer hover:bg-surface-container-high transition-colors">Settimana</button>
+        <button data-view="month" class="whitespace-nowrap bg-primary text-on-primary px-4 py-2 rounded-full text-sm font-label-md cursor-pointer shadow-sm transition-colors">Mese</button>
+    </div>
+</div>
 <div class="calendar-grid p-xs bg-surface-variant/30">
 <!-- Weekdays -->
 <div class="p-1 md:p-md text-center font-label-sm text-on-surface-variant">LUN</div>

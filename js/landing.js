@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const calendarGrid = document.querySelector('.calendar-grid');
     const monthTitle = document.querySelector('h3.text-primary');
-    const viewSelector = document.getElementById('view-selector');
+    const viewSelectors = document.querySelectorAll('.view-selector-container');
 
     let currentView = 'month'; // 'day', 'week', 'month'
     let referenceDate = new Date();
@@ -246,22 +246,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadView();
     });
 
-    viewSelector?.addEventListener('click', (e) => {
-        const target = e.target.closest('[data-view]');
-        if (!target) return;
+    viewSelectors.forEach(selector => {
+        selector.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-view]');
+            if (!target) return;
 
-        currentView = target.dataset.view;
+            currentView = target.dataset.view;
 
-        // UI update
-        viewSelector.querySelectorAll('[data-view]').forEach(el => {
-            el.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
-            el.classList.add('text-secondary', 'hover:bg-surface-container-high');
+            // UI update for ALL selectors to keep them in sync
+            viewSelectors.forEach(s => {
+                s.querySelectorAll('[data-view]').forEach(el => {
+                    if (el.dataset.view === currentView) {
+                        el.classList.remove('text-secondary', 'hover:bg-surface-container-high');
+                        el.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+                    } else {
+                        el.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+                        el.classList.add('text-secondary', 'hover:bg-surface-container-high');
+                    }
+                });
+            });
+
+            if (currentView !== 'day' && window.calendarCleanup) window.calendarCleanup();
+            loadView();
         });
-        target.classList.remove('text-secondary', 'hover:bg-surface-container-high');
-        target.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
-
-        if (currentView !== 'day' && window.calendarCleanup) window.calendarCleanup();
-        loadView();
     });
 
     loadView();
