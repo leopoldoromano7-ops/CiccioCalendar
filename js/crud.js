@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const startTime = shiftForm.querySelector('input[type="time"]:first-of-type').value;
             const endTime = shiftForm.querySelector('input[type="time"]:last-of-type').value;
+            const notes = shiftForm.querySelector('#shift-notes')?.value || 'Passeggiata';
 
             const { error } = await window.supabaseClient
                 .from('walks')
@@ -128,7 +129,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     walk_date: selectedDate,
                     start_time: startTime,
                     end_time: endTime,
-                    assigned_user_id: user.id
+                    assigned_user_id: user.id,
+                    notes: notes
                 }]);
 
             if (error) {

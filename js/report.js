@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const recentTableBody = document.querySelector('tbody');
     const teamRankingList = document.querySelector('.lg\\:col-span-1 .space-y-lg');
     const loadMoreBtn = document.querySelector('.p-md.bg-surface-container-low a');
+    const dateRangeSpan = document.querySelector('.flex.items-center.px-md.py-xs.gap-sm .font-label-md');
+    const trendingSpan = document.querySelector('.mt-md.flex.items-center.gap-xs.text-secondary .font-label-sm');
 
     let currentLimit = 5;
 
@@ -23,7 +25,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderRecentTable(walks.slice(0, currentLimit));
             renderTeamRanking(walks);
             setupRankingModal(walks);
+            renderWeeklyChart(walks);
+            updateDateRange(walks);
+            renderPopularActivities(walks);
         }
+    }
+
+    function updateDateRange(walks) {
+        if (!dateRangeSpan || walks.length === 0) return;
+        const dates = walks.map(w => new Date(w.walk_date));
+        const minDate = new Date(Math.min(...dates));
+        const maxDate = new Date(Math.max(...dates));
+
+        const options = { day: 'numeric', month: 'short' };
+        dateRangeSpan.textContent = `${minDate.toLocaleDateString('it-IT', options)} - ${maxDate.toLocaleDateString('it-IT', options)} ${maxDate.getFullYear()}`;
     }
 
     function calculateDuration(startStr, endStr) {
@@ -53,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (totalHoursEl) totalHoursEl.textContent = Math.round(totalMinutes / 60);
+        if (trendingSpan) trendingSpan.textContent = "Basato su dati reali";
 
         if (longestWalkEl) {
             longestWalkEl.textContent = `${Math.floor(maxMin / 60)}h ${Math.round(maxMin % 60)}m`;
@@ -184,6 +200,67 @@ document.addEventListener('DOMContentLoaded', async () => {
             modal.querySelector('.close-modal').onclick = () => modal.remove();
             modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
         };
+    }
+
+    function renderPopularActivities(walks) {
+        const container = document.querySelector('.bg-surface-container-low.p-md.rounded-xl .flex.flex-wrap');
+        if (!container) return;
+
+        const notes = walks.map(w => w.notes).filter(Boolean);
+        const counts = {};
+        notes.forEach(n => counts[n] = (counts[n] || 0) + 1);
+
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        if (sorted.length === 0) {
+            container.innerHTML = '<span class="text-on-surface-variant text-sm">Nessuna attività registrata</span>';
+            return;
+        }
+
+        container.innerHTML = sorted.slice(0, 5).map(([note]) => `
+            <span class="px-sm py-xs bg-secondary-container text-on-secondary-container rounded-full font-label-sm">${note}</span>
+        `).join('');
+    }
+
+    function renderWeeklyChart(walks) {
+        const chartContainer = document.querySelector('.h-\\[280px\\].flex.items-end');
+        if (!chartContainer) return;
+
+        // Reset data: 7 days, Morning (0) and Afternoon (1)
+        const weeklyData = [
+            { morning: 0, afternoon: 0 }, // Lun
+            { morning: 0, afternoon: 0 }, // Mar
+            { morning: 0, afternoon: 0 }, // Mer
+            { morning: 0, afternoon: 0 }, // Gio
+            { morning: 0, afternoon: 0 }, // Ven
+            { morning: 0, afternoon: 0 }, // Sab
+            { morning: 0, afternoon: 0 }  // Dom
+        ];
+
+        walks.forEach(w => {
+            const date = new Date(w.walk_date);
+            let dayIndex = date.getDay() - 1; // 0 (Mon) to 6 (Sun)
+            if (dayIndex === -1) dayIndex = 6; // Sunday
+
+            const hour = parseInt(w.start_time.split(':')[0]);
+            if (hour < 14) {
+                weeklyData[dayIndex].morning++;
+            } else {
+                weeklyData[dayIndex].afternoon++;
+            }
+        });
+
+        const maxCount = Math.max(...weeklyData.flatMap(d => [d.morning, d.afternoon]), 1);
+        const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
+        chartContainer.innerHTML = weeklyData.map((data, i) => `
+            <div class="flex flex-col items-center gap-sm group h-full justify-end">
+                <div class="flex gap-1 items-end h-full">
+                    <div class="w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.morning / maxCount * 90) + 5}%"></div>
+                    <div class="w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.afternoon / maxCount * 90) + 5}%"></div>
+                </div>
+                <span class="font-label-sm text-on-surface-variant">${dayLabels[i]}</span>
+            </div>
+        `).join('');
     }
 
     if (loadMoreBtn) {
