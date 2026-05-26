@@ -33,11 +33,8 @@ const aiService = {
             const durations = {};
             walks.forEach(w => {
                 const name = w.profiles?.full_name || 'Utente';
-                const start = new Date(`1970-01-01T${w.start_time}`);
-                const end = new Date(`1970-01-01T${w.end_time}`);
-                let diff = (end - start) / 60000;
-                if (diff < 0) diff += 1440;
-                durations[name] = (durations[name] || 0) + diff;
+                const duration = this.calculateMinutes(w.start_time, w.end_time);
+                durations[name] = (durations[name] || 0) + duration;
             });
             const sorted = Object.entries(durations).sort((a, b) => b[1] - a[1]);
             if (sorted.length === 0) return "Non ci sono ancora dati sulla durata delle passeggiate.";
@@ -47,7 +44,7 @@ const aiService = {
         }
 
         // 3. Fascia oraria più usata
-        if (q.includes('fascia oraria') || q.includes('orario più usato')) {
+        if (q.includes('fascia oraria') || q.includes('orario più usato') || q.includes('fascia più usata')) {
             const fasce = { mattina: 0, pomeriggio: 0, sera: 0 };
             walks.forEach(w => {
                 const hour = parseInt(w.start_time.split(':')[0]);
@@ -89,8 +86,6 @@ const aiService = {
 
             if (todayWalks.length === 0) return "Oggi sembra tutto scoperto! Non ci sono ancora passeggiate registrate.";
 
-            // Analisi semplificata: se non c'è nulla prima delle 10, o tra le 13 e le 16, etc.
-            // Per ora diciamo se ci sono meno di 3 passeggiate
             if (todayWalks.length < 3) return `Oggi ci sono solo ${todayWalks.length} passeggiate. Potrebbero esserci degli slot scoperti.`;
             return "Oggi la giornata sembra ben coperta con " + todayWalks.length + " passeggiate.";
         }
@@ -151,6 +146,7 @@ const aiService = {
     },
 
     calculateMinutes(startStr, endStr) {
+        if (!startStr || !endStr) return 0;
         const start = new Date(`1970-01-01T${startStr}`);
         const end = new Date(`1970-01-01T${endStr}`);
         let diff = (end - start) / 60000;
@@ -189,9 +185,15 @@ ${history.map(h => `${h.role}: ${h.content}`).join('\n')}`;
         if (config.AI_PROVIDER === 'ollama') {
             return this.callOllama(prompt);
         } else if (config.AI_PROVIDER === 'cloud') {
-            return this.callCloud(prompt);
+            try {
+                const answer = await this.callCloud(prompt);
+                return answer;
+            } catch (err) {
+                if (localAnswer) return localAnswer + " (Risposta generata con calcolo locale - Cloud non disponibile)";
+                throw err;
+            }
         } else {
-            if (localAnswer) return localAnswer + " (Nessun provider AI configurato)";
+            if (localAnswer) return localAnswer + " (Risposta generata con calcolo locale)";
             throw new Error("Nessun provider AI configurato");
         }
     },
@@ -213,7 +215,7 @@ ${history.map(h => `${h.role}: ${h.content}`).join('\n')}`;
             return result.response;
         } catch (error) {
             console.error("Errore Ollama:", error);
-            throw new Error("AI locale non disponibile. Assicurati che Ollama sia avviato.");
+            throw new Error("Ollama disponibile solo in locale. Assicurati che sia avviato.");
         }
     },
 
@@ -222,20 +224,21 @@ ${history.map(h => `${h.role}: ${h.content}`).join('\n')}`;
         if (!config.CLOUD_AI_ENDPOINT) {
             throw new Error("Endpoint Cloud non configurato.");
         }
-        // Placeholder per futura implementazione cloud
-        // La chiamata deve passare da un backend/proxy per non esporre chiavi
         try {
             const response = await fetch(config.CLOUD_AI_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt })
             });
-            if (!response.ok) throw new Error("Il servizio Cloud non risponde");
+            if (!response.ok) {
+                const errJson = await response.json().catch(() => ({}));
+                throw new Error(errJson.error || "Il servizio Cloud non risponde");
+            }
             const result = await response.json();
             return result.answer || result.response;
         } catch (error) {
             console.error("Errore Cloud AI:", error);
-            throw new Error("AI cloud non disponibile.");
+            throw error;
         }
     },
 

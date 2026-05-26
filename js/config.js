@@ -3,16 +3,19 @@
  */
 const CONFIG = {
     // Provider AI: 'ollama' | 'cloud' | 'none'
-    AI_PROVIDER: 'ollama',
+    // Se siamo su Vercel (hostname non localhost), usiamo cloud come default
+    AI_PROVIDER: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                 ? 'ollama'
+                 : 'cloud',
 
     // Configurazione Ollama Locale
     OLLAMA_ENDPOINT: 'http://localhost:11434/api/generate',
     OLLAMA_MODEL: 'qwen3.5:9b',
 
-    // Configurazione Cloud (Futura)
-    // Non inserire API Key qui. L'endpoint dovrebbe puntare a un proxy serverless.
-    CLOUD_AI_ENDPOINT: '',
-    CLOUD_AI_PROVIDER: '', // es. 'openai', 'anthropic', 'groq'
+    // Configurazione Cloud
+    // L'endpoint punta al proxy serverless locale (/api/ai)
+    CLOUD_AI_ENDPOINT: '/api/ai',
+    CLOUD_AI_PROVIDER: 'groq',
 };
 
 // Esporta la configurazione globalmente
