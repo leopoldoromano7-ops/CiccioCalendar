@@ -120,9 +120,9 @@ async function renderHeader() {
                             <p class="text-xs text-on-surface-variant truncate">${email}</p>
                         </div>
                     </div>
-                    <button onclick="window.logout()" class="w-full flex items-center gap-3 p-3 rounded-lg text-error hover:bg-error/10 transition-colors">
+                    <button onclick="window.logout()" class="w-full flex items-center gap-3 p-4 rounded-xl text-white bg-error hover:opacity-90 transition-all shadow-lg shadow-error/20 active:scale-[0.98]">
                         <span class="material-symbols-outlined">logout</span>
-                        <span class="font-label-md">Logout</span>
+                        <span class="font-bold">Logout</span>
                     </button>
                 </div>
             </div>

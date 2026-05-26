@@ -153,15 +153,11 @@
 <div class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-sm overflow-hidden">
 <div class="flex items-center justify-between mb-md">
 <h2 class="font-headline-md text-headline-md text-on-surface">Programma</h2>
-<div class="flex gap-xs">
-<span class="flex items-center gap-xs px-sm py-xs bg-secondary-container text-on-secondary-container rounded-full text-[12px] font-label-sm">
-<span class="w-2 h-2 rounded-full bg-secondary"></span> 
-                            Mattina
-                        </span>
-<span class="flex items-center gap-xs px-sm py-xs bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-[12px] font-label-sm">
-<span class="w-2 h-2 rounded-full bg-tertiary"></span> 
-                            Sera / Notte
-                        </span>
+<div class="flex gap-xs bg-surface-container-low p-1 rounded-xl" id="crud-view-filter">
+    <button data-fascia="morning" class="px-md py-xs rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-all">Mattina</button>
+    <button data-fascia="afternoon" class="px-md py-xs rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-all">Pomeriggio</button>
+    <button data-fascia="evening" class="px-md py-xs rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-all">Sera</button>
+    <button data-fascia="all" class="bg-primary text-on-primary px-md py-xs rounded-lg font-label-md text-label-md shadow-sm transition-all">Tutti</button>
 </div>
 </div>
 <div class="h-[600px] overflow-y-auto custom-scrollbar pr-sm">
@@ -209,38 +205,17 @@
 <span class="font-label-md text-label-md text-primary" id="total-duration-display">0 ore</span>
 </div>
 <div class="flex justify-between items-center p-sm bg-surface-container-lowest rounded-lg">
-<span class="text-on-surface-variant">Membri Team</span>
+<span class="text-on-surface-variant">Accompagnatori</span>
 <span class="font-label-md text-label-md text-primary" id="total-staff-count">0 persone</span>
 </div>
 </div>
 </div>
 <!-- Staff List -->
 <div class="bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-sm">
-<h3 class="font-headline-md text-headline-md mb-md text-on-surface">In Servizio Oggi</h3>
-<div class="space-y-md">
-<div class="flex items-center gap-sm">
-<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold">MK</div>
-<div>
-<p class="font-label-md text-label-md text-primary">Marcus K.</p>
-<p class="font-label-sm text-label-sm text-on-surface-variant">Morning Shift</p>
+<h3 class="font-headline-md text-headline-md mb-md text-on-surface">Accompagnatori di Oggi</h3>
+<div class="space-y-md" id="active-staff-list">
+    <!-- Dynamic list -->
 </div>
-</div>
-<div class="flex items-center gap-sm">
-<div class="w-10 h-10 rounded-full bg-primary-fixed-dim flex items-center justify-center text-on-primary-fixed-variant font-bold">SL</div>
-<div>
-<p class="font-label-md text-label-md text-primary">Sarah L.</p>
-<p class="font-label-sm text-label-sm text-on-surface-variant">Morning Shift</p>
-</div>
-</div>
-<div class="flex items-center gap-sm">
-<div class="w-10 h-10 rounded-full bg-tertiary-fixed-dim flex items-center justify-center text-on-tertiary-fixed-variant font-bold">JD</div>
-<div>
-<p class="font-label-md text-label-md text-primary">James D.</p>
-<p class="font-label-sm text-label-sm text-on-surface-variant">Night Watch</p>
-</div>
-</div>
-</div>
-<button class="w-full mt-md py-sm border border-outline text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">Manage Team</button>
 </div>
 </div>
 </div>

@@ -7,10 +7,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const recentTableBody = document.querySelector('tbody');
     const teamRankingList = document.querySelector('.lg\\:col-span-1 .space-y-lg');
     const loadMoreBtn = document.querySelector('.p-md.bg-surface-container-low a');
-    const dateRangeSpan = document.querySelector('.flex.items-center.px-md.py-xs.gap-sm .font-label-md');
+    const dateRangeSpan = document.getElementById('date-range-display');
     const trendingSpan = document.querySelector('.mt-md.flex.items-center.gap-xs.text-secondary .font-label-sm');
+    const fasciaFilterContainer = document.getElementById('fascia-filter-container');
 
     let currentLimit = 5;
+    let allWalks = [];
+    let currentFascia = 'all'; // 'all', 'morning', 'afternoon', 'evening'
 
     async function loadReports() {
         if (!window.supabaseClient) return;
@@ -21,14 +24,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             .order('walk_date', { ascending: false }, 'start_time', { ascending: false });
 
         if (walks) {
-            updateMetrics(walks);
-            renderRecentTable(walks.slice(0, currentLimit));
-            renderTeamRanking(walks);
-            setupRankingModal(walks);
-            renderWeeklyChart(walks);
-            updateDateRange(walks);
-            renderPopularActivities(walks);
+            allWalks = walks;
+            applyFiltersAndRender();
         }
+    }
+
+    function applyFiltersAndRender() {
+        let filtered = allWalks;
+
+        if (currentFascia !== 'all') {
+            filtered = allWalks.filter(w => {
+                const hour = parseInt(w.start_time.split(':')[0]);
+                if (currentFascia === 'morning') return hour < 12;
+                if (currentFascia === 'afternoon') return hour >= 12 && hour < 18;
+                if (currentFascia === 'evening') return hour >= 18;
+                return true;
+            });
+        }
+
+        updateMetrics(filtered);
+        renderRecentTable(filtered.slice(0, currentLimit));
+        renderTeamRanking(filtered);
+        setupRankingModal(filtered);
+        renderWeeklyChart(filtered);
+        updateDateRange(filtered);
+        renderPopularActivities(filtered);
     }
 
     function updateDateRange(walks) {
@@ -222,8 +242,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderWeeklyChart(walks) {
-        const chartContainer = document.querySelector('.h-\\[280px\\].flex.items-end');
-        if (!chartContainer) return;
+        const chartWrapper = document.querySelector('.lg\\:col-span-2 > .bg-surface-container-lowest');
+        let chartContainer = document.querySelector('.h-\\[280px\\].flex.items-end');
+        if (!chartWrapper || !chartContainer) return;
+
+        // Make wrapper horizontally scrollable on mobile
+        chartWrapper.style.overflowX = 'auto';
+        chartContainer.style.minWidth = window.innerWidth < 640 ? '600px' : '100%';
 
         // Reset data: 7 days, Morning, Afternoon, Evening
         const weeklyData = [
@@ -255,11 +280,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
         chartContainer.innerHTML = weeklyData.map((data, i) => `
-            <div class="flex flex-col items-center gap-sm group h-full justify-end">
-                <div class="flex gap-1 items-end h-full">
-                    <div class="w-6 md:w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.morning / maxCount * 90) + 5}%" title="Mattina: ${data.morning}"></div>
-                    <div class="w-6 md:w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.afternoon / maxCount * 90) + 5}%" title="Pomeriggio: ${data.afternoon}"></div>
-                    <div class="w-6 md:w-8 bg-tertiary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.evening / maxCount * 90) + 5}%" title="Sera: ${data.evening}"></div>
+            <div class="flex flex-col items-center gap-sm group h-full justify-end flex-1">
+                <div class="flex gap-1 items-end h-full w-full justify-center">
+                    <div class="w-4 md:w-8 bg-primary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.morning / maxCount * 90) + 5}%" title="Mattina: ${data.morning}"></div>
+                    <div class="w-4 md:w-8 bg-secondary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.afternoon / maxCount * 90) + 5}%" title="Pomeriggio: ${data.afternoon}"></div>
+                    <div class="w-4 md:w-8 bg-tertiary rounded-t-sm chart-bar-glow transition-all hover:scale-x-110" style="height: ${(data.evening / maxCount * 90) + 5}%" title="Sera: ${data.evening}"></div>
                 </div>
                 <span class="font-label-sm text-on-surface-variant">${dayLabels[i]}</span>
             </div>
@@ -270,8 +295,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadMoreBtn.onclick = (e) => {
             e.preventDefault();
             currentLimit += 5;
-            loadReports();
+            applyFiltersAndRender();
         };
+    }
+
+    if (fasciaFilterContainer) {
+        fasciaFilterContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            currentFascia = btn.dataset.fascia;
+
+            // UI update
+            fasciaFilterContainer.querySelectorAll('button').forEach(b => {
+                if (b === btn) {
+                    b.className = 'px-md py-xs rounded-lg font-label-md text-label-md bg-primary text-on-primary shadow-sm transition-all';
+                } else {
+                    b.className = 'px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all';
+                }
+            });
+
+            applyFiltersAndRender();
+        });
     }
 
     loadReports();

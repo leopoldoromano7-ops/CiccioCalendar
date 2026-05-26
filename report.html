@@ -132,16 +132,24 @@
 <header class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
 <div>
 <h1 class="font-headline-lg text-headline-lg text-primary mb-xs">Statistiche e Report</h1>
-<p class="text-on-surface-variant font-body-md">Analizza le attività e le performance del team con Ciccio.</p>
+<p class="text-on-surface-variant font-body-md">Analizza le attività e le performance degli accompagnatori con Ciccio.</p>
 </div>
-<div class="flex items-center gap-sm bg-surface-container-low p-xs rounded-xl outline outline-1 outline-outline-variant">
-<div class="flex items-center px-md py-xs gap-sm">
-<span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
-<span class="font-label-md">01 Ott - 31 Ott 2024</span>
-</div>
-<button class="bg-surface-container-highest hover:bg-surface-variant p-xs rounded-lg transition-colors">
-<span class="material-symbols-outlined" data-icon="expand_more">expand_more</span>
-</button>
+<div class="flex flex-wrap items-center gap-md">
+    <!-- Fascia Filter -->
+    <div class="flex items-center gap-sm bg-surface-container-low p-1 rounded-xl outline outline-1 outline-outline-variant" id="fascia-filter-container">
+        <button data-fascia="all" class="px-md py-xs rounded-lg font-label-md text-label-md bg-primary text-on-primary shadow-sm transition-all">Tutti</button>
+        <button data-fascia="morning" class="px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Mattina</button>
+        <button data-fascia="afternoon" class="px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Pomeriggio</button>
+        <button data-fascia="evening" class="px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Sera</button>
+    </div>
+
+    <!-- Date Range -->
+    <div class="flex items-center gap-sm bg-surface-container-low p-xs rounded-xl outline outline-1 outline-outline-variant">
+        <div class="flex items-center px-md py-xs gap-sm">
+            <span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
+            <span class="font-label-md" id="date-range-display">Caricamento...</span>
+        </div>
+    </div>
 </div>
 </header>
 <!-- Bento Grid for Key Metrics -->
@@ -193,11 +201,11 @@
 </section>
 <!-- Secondary Grid -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-xl">
-<!-- Classifica Team (Left Sidebar-ish) -->
+<!-- Classifica Accompagnatori (Left Sidebar-ish) -->
 <div class="lg:col-span-1 flex flex-col gap-md">
 <div class="bg-surface-container-lowest p-md rounded-xl soft-shadow">
 <div class="flex items-center justify-between mb-lg">
-<h3 class="font-headline-md text-primary">Classifica Team</h3>
+<h3 class="font-headline-md text-primary">Accompagnatori</h3>
 <span class="material-symbols-outlined text-on-surface-variant" data-icon="leaderboard">leaderboard</span>
 </div>
 <div class="space-y-lg">
@@ -336,7 +344,7 @@
 <table class="w-full text-left border-collapse">
 <thead>
 <tr class="bg-surface-container-low">
-<th class="px-md py-sm font-label-sm text-secondary">Membro Team</th>
+<th class="px-md py-sm font-label-sm text-secondary">Accompagnatore</th>
 <th class="px-md py-sm font-label-sm text-secondary">Attività</th>
 <th class="px-md py-sm font-label-sm text-secondary">Durata</th>
 <th class="px-md py-sm font-label-sm text-secondary">Data</th>
