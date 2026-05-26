@@ -47,10 +47,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderMonth(firstDay, lastDay, walks) {
         calendarGrid.innerHTML = '';
-        const days = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
+        const isMobile = window.innerWidth < 640;
+        const days = isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
         days.forEach(d => {
             const h = document.createElement('div');
-            h.className = 'p-md text-center font-label-sm text-on-surface-variant';
+            h.className = 'p-1 md:p-md text-center font-label-sm text-on-surface-variant';
             h.textContent = d;
             calendarGrid.appendChild(h);
         });
@@ -60,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         for (let i = 0; i < startDay; i++) {
             const empty = document.createElement('div');
-            empty.className = 'bg-white min-h-[140px] p-sm opacity-20';
+            empty.className = 'bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm opacity-20';
             calendarGrid.appendChild(empty);
         }
 
@@ -69,20 +70,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dayWalks = walks.filter(w => w.walk_date === dateStr);
 
             const dayCell = document.createElement('div');
-            dayCell.className = 'bg-white min-h-[140px] p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
+            dayCell.className = 'bg-white min-h-[80px] md:min-h-[140px] p-1 md:p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
             dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
 
-            let walksHtml = dayWalks.map(w => `
-                <div class="mt-xs relative bg-surface-container-high p-xs rounded pl-md overflow-hidden">
-                    <div class="shift-accent bg-primary"></div>
-                    <p class="text-[10px] font-bold leading-tight">${w.start_time}</p>
-                </div>
-            `).join('');
+            let walksHtml = '';
+            if (isMobile) {
+                // Show dots or thin bars for mobile
+                walksHtml = dayWalks.length > 0 ? `
+                    <div class="flex flex-wrap gap-0.5 mt-1 justify-center">
+                        ${dayWalks.map(() => `<div class="w-1.5 h-1.5 rounded-full bg-primary"></div>`).join('')}
+                    </div>
+                ` : '';
+            } else {
+                walksHtml = dayWalks.map(w => `
+                    <div class="mt-xs relative bg-surface-container-high p-xs rounded pl-md overflow-hidden">
+                        <div class="shift-accent bg-primary"></div>
+                        <p class="text-[12px] font-bold leading-tight">${w.start_time}</p>
+                    </div>
+                `).join('');
+            }
 
             dayCell.innerHTML = `
-                <div class="flex flex-col h-full">
-                    <span class="text-label-sm ${dateStr === new Date().toISOString().split('T')[0] ? 'font-bold text-primary underline' : 'text-outline-variant'}">${String(day).padStart(2, '0')}</span>
-                    <div class="flex-grow overflow-hidden">
+                <div class="flex flex-col h-full items-center md:items-start">
+                    <span class="text-[10px] md:text-label-sm ${dateStr === new Date().toISOString().split('T')[0] ? 'font-bold text-primary underline' : 'text-outline-variant'}">${String(day).padStart(2, '0')}</span>
+                    <div class="flex-grow overflow-hidden w-full">
                         ${walksHtml}
                     </div>
                 </div>
@@ -93,10 +104,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderWeek(start, walks) {
         calendarGrid.innerHTML = '';
-        const days = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
+        const isMobile = window.innerWidth < 640;
+        const days = isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
         days.forEach(d => {
             const h = document.createElement('div');
-            h.className = 'p-md text-center font-label-sm text-on-surface-variant';
+            h.className = 'p-1 md:p-md text-center font-label-sm text-on-surface-variant';
             h.textContent = d;
             calendarGrid.appendChild(h);
         });
@@ -108,13 +120,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dayWalks = walks.filter(w => w.walk_date === dateStr);
 
             const dayCell = document.createElement('div');
-            dayCell.className = 'bg-white min-h-[400px] p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
+            dayCell.className = 'bg-white min-h-[300px] md:min-h-[400px] p-1 md:p-sm border hover:bg-surface/50 cursor-pointer transition-colors';
             dayCell.onclick = () => window.location.href = `crud.html?date=${dateStr}`;
 
             let walksHtml = dayWalks.map(w => `
-                <div class="mt-sm relative bg-surface-container-high p-sm rounded pl-md overflow-hidden shadow-sm">
+                <div class="mt-sm relative bg-surface-container-high p-2 md:p-sm rounded pl-4 md:pl-md overflow-hidden shadow-sm">
                     <div class="shift-accent bg-primary"></div>
-                    <p class="text-xs font-bold">${w.start_time} - ${w.end_time || '--'}</p>
+                    <p class="text-sm md:text-base font-bold">${w.start_time} - ${w.end_time || '--'}</p>
                 </div>
             `).join('');
 
@@ -172,6 +184,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Re-add class after render if we switch back
         const cleanup = () => {
              calendarGrid.className = 'calendar-grid p-xs bg-surface-variant/30';
+             if (!calendarGrid.parentElement.classList.contains('overflow-x-auto')) {
+                 const wrapper = document.createElement('div');
+                 wrapper.className = 'overflow-x-auto';
+                 calendarGrid.parentNode.insertBefore(wrapper, calendarGrid);
+                 wrapper.appendChild(calendarGrid);
+             }
         };
         window.calendarCleanup = cleanup;
     }

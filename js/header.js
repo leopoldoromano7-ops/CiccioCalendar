@@ -2,6 +2,19 @@
  * Centralized Header Component for CiccioSheets
  */
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[m];
+    });
+}
+
 async function renderHeader() {
     const headerContainer = document.getElementById('header-container');
     if (!headerContainer) return;
@@ -19,6 +32,9 @@ async function renderHeader() {
     }
 
     const isLoggedIn = !!session;
+    const fullName = escapeHTML(profile?.full_name || 'Utente');
+    const email = escapeHTML(session?.user?.email || '');
+    const firstLetter = fullName.charAt(0).toUpperCase();
 
     const headerHtml = `
     <header class="w-full top-0 sticky z-50 bg-surface h-20 shadow-none border-b border-surface-variant/30">
@@ -45,11 +61,11 @@ async function renderHeader() {
             <!-- Auth Buttons -->
             <div class="flex items-center gap-2 md:gap-md">
                 ${isLoggedIn ? `
-                    <span class="hidden md:block font-body-md text-primary mr-2">${profile?.full_name || 'Utente'}</span>
+                    <span class="hidden md:block font-body-md text-primary mr-2">${fullName}</span>
                     <button onclick="window.logout()" class="hidden md:block bg-secondary text-on-secondary px-md py-sm rounded-lg font-label-md text-label-md active:scale-95 duration-200 transition-all">Logout</button>
                 ` : `
                     <a href="login.html" class="font-label-md text-label-md text-primary hover:underline transition-all px-2">Log In</a>
-                    <a href="register.html" class="bg-primary text-on-primary px-3 md:px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200 whitespace-nowrap">
+                    <a href="register.html" class="hidden md:block bg-primary text-on-primary px-3 md:px-xl py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 duration-200 whitespace-nowrap">
                         Get Started
                     </a>
                 `}
@@ -88,7 +104,7 @@ async function renderHeader() {
                             </a>
                             <a href="timbratura.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container text-primary transition-colors">
                                 <span class="material-symbols-outlined">timer</span>
-                                <span class="font-label-md">TIMBRA</span>
+                                <span class="font-label-md">Timbrature</span>
                             </a>
                         </nav>
                     </div>
@@ -97,11 +113,11 @@ async function renderHeader() {
                 <div class="p-4 border-t border-surface-variant">
                     <div class="flex items-center gap-3 mb-4 px-3">
                         <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center font-bold text-secondary">
-                            ${profile?.full_name?.charAt(0) || 'U'}
+                            ${firstLetter}
                         </div>
                         <div class="overflow-hidden">
-                            <p class="font-label-md text-primary truncate">${profile?.full_name || 'Utente'}</p>
-                            <p class="text-xs text-on-surface-variant truncate">${session.user.email}</p>
+                            <p class="font-label-md text-primary truncate">${fullName}</p>
+                            <p class="text-xs text-on-surface-variant truncate">${email}</p>
                         </div>
                     </div>
                     <button onclick="window.logout()" class="w-full flex items-center gap-3 p-3 rounded-lg text-error hover:bg-error/10 transition-colors">
