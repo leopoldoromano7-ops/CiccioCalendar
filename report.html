@@ -116,6 +116,8 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #fff8f5; }
         ::-webkit-scrollbar-thumb { background: #d7c3b0; border-radius: 10px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-background text-on-surface font-body-md selection:bg-secondary-fixed">
@@ -129,25 +131,25 @@
 <script src="js/report.js"></script>
 <!-- TopAppBar -->
 <div id="header-container"></div>
-<main class="max-w-7xl mx-auto px-margin-desktop py-xl">
+<main class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-lg md:py-xl overflow-x-hidden">
 <!-- AI Chatbot Section -->
-<section id="ai-chatbot-section" class="mb-xl">
+<section id="ai-chatbot-section" class="mb-lg md:mb-xl">
     <div class="bg-surface-container-lowest rounded-xl soft-shadow border border-primary/10 overflow-hidden flex flex-col h-[500px] md:h-[600px]">
         <!-- Chat Header -->
-        <div class="p-md border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
-            <div class="flex items-center gap-md">
-                <div class="w-10 h-10 rounded-full bg-white p-1.5 flex items-center justify-center border border-outline-variant">
+        <div class="p-sm md:p-md border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+            <div class="flex items-center gap-sm md:gap-md">
+                <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white p-1 flex items-center justify-center border border-outline-variant">
                     <img src="favicon.svg" alt="Ciccio AI" class="w-full h-full object-contain">
                 </div>
                 <div>
-                    <h2 class="font-headline-md text-primary text-lg leading-tight">Chiedi a Ciccio</h2>
+                    <h2 class="font-headline-md text-primary text-md md:text-lg leading-tight">Chiedi a Ciccio</h2>
                     <div class="flex items-center gap-xs">
-                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <p class="text-on-surface-variant font-label-sm">Chatbot intelligente attivo</p>
+                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                        <p class="text-on-surface-variant text-[10px] md:font-label-sm">AI Attiva</p>
                     </div>
                 </div>
             </div>
-            <button id="generate-ai-report-btn" class="flex items-center gap-xs px-md py-sm rounded-lg bg-primary text-on-primary font-label-md hover:opacity-90 transition-opacity disabled:opacity-50">
+            <button id="generate-ai-report-btn" class="flex items-center gap-xs px-sm md:px-md py-xs md:py-sm rounded-lg bg-primary text-on-primary font-label-md hover:opacity-90 transition-opacity disabled:opacity-50">
                 <span class="material-symbols-outlined text-[20px]">analytics</span>
                 <span class="hidden sm:inline">Genera report</span>
                 <span class="sm:hidden">Report</span>
@@ -174,15 +176,22 @@
                 <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
                 <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
             </div>
-            <p class="text-on-surface-variant font-label-sm italic">Ciccio sta analizzando i dati...</p>
+            <p class="text-on-surface-variant font-label-sm italic">Ciccio sta pensando...</p>
         </div>
 
         <!-- Chat Input Area -->
-        <div class="p-md border-t border-outline-variant bg-surface-container-lowest">
-            <form id="chat-form" class="flex gap-sm">
-                <input type="text" id="chat-input" placeholder="Chiedimi chi è in servizio oggi..." class="flex-grow bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-xl px-md py-sm font-body-md" autocomplete="off">
-                <button type="submit" id="send-chat-btn" class="w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50">
-                    <span class="material-symbols-outlined">send</span>
+        <div class="p-sm md:p-md border-t border-outline-variant bg-surface-container-lowest">
+            <!-- Suggestions -->
+            <div id="chat-suggestions" class="flex gap-xs overflow-x-auto pb-sm no-scrollbar scroll-smooth">
+                <button class="flex-shrink-0 px-sm py-1 bg-surface-container-high rounded-full text-on-surface-variant text-[11px] md:text-xs hover:bg-primary hover:text-on-primary transition-colors border border-outline-variant/30">Chi è in servizio oggi?</button>
+                <button class="flex-shrink-0 px-sm py-1 bg-surface-container-high rounded-full text-on-surface-variant text-[11px] md:text-xs hover:bg-primary hover:text-on-primary transition-colors border border-outline-variant/30">Chi scende di più Ciccio?</button>
+                <button class="flex-shrink-0 px-sm py-1 bg-surface-container-high rounded-full text-on-surface-variant text-[11px] md:text-xs hover:bg-primary hover:text-on-primary transition-colors border border-outline-variant/30">Chi passa più tempo con Ciccio?</button>
+                <button class="flex-shrink-0 px-sm py-1 bg-surface-container-high rounded-full text-on-surface-variant text-[11px] md:text-xs hover:bg-primary hover:text-on-primary transition-colors border border-outline-variant/30">Fascia più usata?</button>
+            </div>
+            <form id="chat-form" class="flex gap-sm mt-xs">
+                <input type="text" id="chat-input" placeholder="Chiedimi qualcosa..." class="flex-grow bg-surface-container-low border-transparent focus:border-primary focus:ring-0 rounded-xl px-md py-sm font-body-md text-sm md:text-base" autocomplete="off">
+                <button type="submit" id="send-chat-btn" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50">
+                    <span class="material-symbols-outlined text-[20px] md:text-[24px]">send</span>
                 </button>
             </form>
         </div>
@@ -190,25 +199,25 @@
 </section>
 
 <!-- Page Header & Filter -->
-<header class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
-<div>
-<h1 class="font-headline-lg text-headline-lg text-primary mb-xs">Statistiche e Report</h1>
-<p class="text-on-surface-variant font-body-md">Analizza le attività e le performance degli accompagnatori con Ciccio.</p>
+<header class="flex flex-col lg:flex-row lg:items-end justify-between gap-md mb-xl">
+<div class="max-w-2xl">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-primary mb-xs">Statistiche e Report</h1>
+<p class="text-on-surface-variant text-sm md:text-base">Analizza le attività e le performance degli accompagnatori.</p>
 </div>
-<div class="flex flex-wrap items-center gap-md">
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-md">
     <!-- Fascia Filter -->
-    <div class="flex items-center gap-sm bg-surface-container-low p-1 rounded-xl outline outline-1 outline-outline-variant" id="fascia-filter-container">
-        <button data-fascia="all" class="px-md py-xs rounded-lg font-label-md text-label-md bg-primary text-on-primary shadow-sm transition-all">Tutti</button>
-        <button data-fascia="morning" class="px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Mattina</button>
-        <button data-fascia="afternoon" class="px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Pomeriggio</button>
-        <button data-fascia="evening" class="px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Sera</button>
+    <div class="flex items-center gap-xs bg-surface-container-low p-1 rounded-xl outline outline-1 outline-outline-variant overflow-x-auto no-scrollbar" id="fascia-filter-container">
+        <button data-fascia="all" class="whitespace-nowrap px-md py-xs rounded-lg font-label-md text-label-md bg-primary text-on-primary shadow-sm transition-all">Tutti</button>
+        <button data-fascia="morning" class="whitespace-nowrap px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Mattina</button>
+        <button data-fascia="afternoon" class="whitespace-nowrap px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Pomeriggio</button>
+        <button data-fascia="evening" class="whitespace-nowrap px-md py-xs rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all">Sera</button>
     </div>
 
     <!-- Date Range -->
     <div class="flex items-center gap-sm bg-surface-container-low p-xs rounded-xl outline outline-1 outline-outline-variant">
-        <div class="flex items-center px-md py-xs gap-sm">
+        <div class="flex items-center px-md py-xs gap-sm w-full justify-center">
             <span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
-            <span class="font-label-md" id="date-range-display">Caricamento...</span>
+            <span class="font-label-md whitespace-nowrap text-xs md:text-sm" id="date-range-display">Caricamento...</span>
         </div>
     </div>
 </div>
@@ -261,7 +270,7 @@
 </div>
 </section>
 <!-- Secondary Grid -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-xl">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg md:gap-xl">
 <!-- Classifica Accompagnatori (Left Sidebar-ish) -->
 <div class="lg:col-span-1 flex flex-col gap-md">
 <div class="bg-surface-container-lowest p-md rounded-xl soft-shadow">
@@ -326,11 +335,11 @@
 </div>
 </div>
 <!-- Frequenza Uscite (Right Content) -->
-<div class="lg:col-span-2 space-y-xl">
+<div class="lg:col-span-2 space-y-lg md:space-y-xl">
 <!-- Bar Chart Placeholder -->
-<div class="bg-surface-container-lowest p-md rounded-xl soft-shadow" style="transform: translateY(0px) scale(1); box-shadow: rgba(107, 92, 76, 0.04) 0px 20px 40px -10px;">
-<div class="flex items-center justify-between mb-lg">
-<h3 class="font-headline-md text-primary">Frequenza Uscite Settimanale</h3>
+<div class="bg-surface-container-lowest p-md rounded-xl soft-shadow overflow-hidden" style="transform: translateY(0px) scale(1); box-shadow: rgba(107, 92, 76, 0.04) 0px 20px 40px -10px;">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-md mb-lg">
+<h3 class="font-headline-md text-primary">Uscite Settimanali</h3>
 <div class="flex flex-wrap gap-sm">
 <span class="flex items-center gap-xs font-label-sm text-on-surface-variant">
 <span class="w-3 h-3 rounded-full bg-primary"></span> Mattina

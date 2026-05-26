@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const chatLoading = document.getElementById('chat-loading');
     const generateReportBtn = document.getElementById('generate-ai-report-btn');
     const sendChatBtn = document.getElementById('send-chat-btn');
+    const chatSuggestions = document.getElementById('chat-suggestions');
 
     let currentLimit = 5;
     let allWalks = [];
@@ -74,7 +75,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Auto-scroll with small delay to ensure DOM is updated
+        setTimeout(() => {
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 10);
 
         // Mantieni cronologia (max 10 messaggi)
         chatHistory.push({ role: isAI ? 'assistant' : 'user', content: text });
@@ -89,7 +97,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInput.value = '';
         addMessage('user', question);
 
+        // Show loading state
         chatLoading.classList.remove('hidden');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
         sendChatBtn.disabled = true;
         if (generateReportBtn) generateReportBtn.disabled = true;
 
@@ -402,6 +412,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (generateReportBtn) {
         generateReportBtn.onclick = handleGenerateReport;
+    }
+
+    if (chatSuggestions) {
+        chatSuggestions.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            chatInput.value = btn.textContent;
+            chatForm.dispatchEvent(new Event('submit'));
+        });
     }
 
     if (fasciaFilterContainer) {

@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateTitle = document.querySelector('h1');
     if (dateTitle) dateTitle.textContent = new Date(selectedDate).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    const timelineContainer = document.querySelector('.relative.z-10');
+    const timelineContainer = document.getElementById('timeline-grid');
+    const mobileListView = document.getElementById('mobile-list-view');
     const staffList = document.getElementById('active-staff-list');
     const shiftForm = document.querySelector('#shiftModal form');
     const totalDurationEl = document.getElementById('total-duration-display');
@@ -36,10 +37,72 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderAll() {
-        renderTimeline(allShifts);
+        const desktopView = document.getElementById('desktop-timeline-view');
+        if (window.innerWidth < 768) {
+            renderMobileList(allShifts);
+            if (desktopView) desktopView.classList.add('hidden');
+            if (mobileListView) mobileListView.classList.remove('hidden');
+        } else {
+            renderTimeline(allShifts);
+            if (desktopView) desktopView.classList.remove('hidden');
+            if (mobileListView) mobileListView.classList.add('hidden');
+        }
         renderStaff(allShifts);
         updateSummary(allShifts);
         applyViewFilter();
+    }
+
+    function renderMobileList(walks) {
+        if (!mobileListView) return;
+        mobileListView.innerHTML = '';
+
+        if (walks.length === 0) {
+            mobileListView.innerHTML = `
+                <div class="p-xl text-center">
+                    <span class="material-symbols-outlined text-outline text-[48px] mb-md">event_busy</span>
+                    <p class="text-on-surface-variant font-body-md">Nessuna attività programmata per oggi.</p>
+                </div>
+            `;
+            return;
+        }
+
+        walks.sort((a,b) => a.start_time.localeCompare(b.start_time)).forEach(walk => {
+            const isOwner = currentUser && walk.assigned_user_id === currentUser.id;
+            const card = document.createElement('div');
+            card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant shadow-sm';
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-sm">
+                    <div class="flex items-center gap-sm">
+                        <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs">
+                            ${(walk.profiles?.full_name || 'U').substring(0, 2).toUpperCase()}
+                        </div>
+                        <p class="font-label-md text-primary">${walk.profiles?.full_name || 'Utente'}</p>
+                    </div>
+                    ${isOwner ? `<button class="material-symbols-outlined text-error delete-walk" data-id="${walk.id}">delete</button>` : ''}
+                </div>
+                <div class="flex items-center gap-md">
+                    <div class="flex items-center gap-xs text-secondary">
+                        <span class="material-symbols-outlined text-[18px]">schedule</span>
+                        <span class="font-label-sm">${walk.start_time} - ${walk.end_time}</span>
+                    </div>
+                    <div class="flex-grow">
+                         <p class="font-body-md text-on-surface">${walk.notes || 'Passeggiata'}</p>
+                    </div>
+                </div>
+            `;
+            mobileListView.appendChild(card);
+        });
+
+        document.querySelectorAll('.delete-walk').forEach(btn => {
+            btn.onclick = async (e) => {
+                e.stopPropagation();
+                if (confirm('Sicuro di voler eliminare questa attività?')) {
+                    const id = e.target.dataset.id;
+                    await window.supabaseClient.from('walks').delete().eq('id', id);
+                    loadShifts();
+                }
+            };
+        });
     }
 
     function calculateDuration(startStr, endStr) {
@@ -250,6 +313,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+
+    window.addEventListener('resize', () => {
+        renderAll();
+    });
 
     loadShifts();
 });
