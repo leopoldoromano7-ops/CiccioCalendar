@@ -214,10 +214,15 @@
     </div>
 
     <!-- Date Range -->
-    <div class="flex items-center gap-sm bg-surface-container-low p-xs rounded-xl outline outline-1 outline-outline-variant">
-        <div class="flex items-center px-md py-xs gap-sm w-full justify-center">
-            <span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
-            <span class="font-label-md whitespace-nowrap text-xs md:text-sm" id="date-range-display">Caricamento...</span>
+    <div class="flex flex-col sm:flex-row items-center gap-sm bg-surface-container-low p-2 rounded-xl outline outline-1 outline-outline-variant">
+        <div class="flex items-center gap-2 px-2">
+            <label for="date-from" class="font-label-sm text-secondary uppercase text-[10px]">Dal</label>
+            <input type="date" id="date-from" class="bg-transparent border-none p-0 text-sm font-label-md focus:ring-0 text-primary cursor-pointer">
+        </div>
+        <div class="hidden sm:block h-4 w-px bg-outline-variant"></div>
+        <div class="flex items-center gap-2 px-2 border-t sm:border-t-0 border-outline-variant pt-2 sm:pt-0">
+            <label for="date-to" class="font-label-sm text-secondary uppercase text-[10px]">Al</label>
+            <input type="date" id="date-to" class="bg-transparent border-none p-0 text-sm font-label-md focus:ring-0 text-primary cursor-pointer">
         </div>
     </div>
 </div>
@@ -405,73 +410,13 @@
 </div>
 </div>
 </div>
-<!-- Dettaglio Turni Table -->
+<!-- Dettaglio Attività Recenti -->
 <div class="bg-surface-container-lowest rounded-xl soft-shadow overflow-hidden" style="transform: translateY(0px) scale(1); box-shadow: rgba(107, 92, 76, 0.04) 0px 20px 40px -10px;">
 <div class="px-md py-lg border-b border-surface-container">
 <h3 class="font-headline-md text-primary">Dettaglio Attività Recenti</h3>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-surface-container-low">
-<th class="px-md py-sm font-label-sm text-secondary">Accompagnatore</th>
-<th class="px-md py-sm font-label-sm text-secondary">Attività</th>
-<th class="px-md py-sm font-label-sm text-secondary">Durata</th>
-<th class="px-md py-sm font-label-sm text-secondary">Data</th>
-<th class="px-md py-sm font-label-sm text-secondary"></th>
-</tr>
-</thead>
-<tbody class="divide-y divide-surface-container">
-<tr class="hover:bg-surface-bright transition-colors">
-<td class="px-md py-md">
-<div class="flex items-center gap-sm">
-<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center font-label-sm">ER</div>
-<span class="font-body-md text-on-surface">Elena Rossi</span>
-</div>
-</td>
-<td class="px-md py-md">
-<span class="font-body-md">Passeggiata Parco</span>
-</td>
-<td class="px-md py-md font-body-md">1h 15m</td>
-<td class="px-md py-md text-on-surface-variant font-label-sm">Oggi, 09:30</td>
-<td class="px-md py-md text-right">
-<button class="material-symbols-outlined text-outline hover:text-primary transition-colors" data-icon="more_vert">more_vert</button>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors">
-<td class="px-md py-md">
-<div class="flex items-center gap-sm">
-<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center font-label-sm">MB</div>
-<span class="font-body-md text-on-surface">Marco Bianchi</span>
-</div>
-</td>
-<td class="px-md py-md">
-<span class="font-body-md">Sessione Gioco</span>
-</td>
-<td class="px-md py-md font-body-md">45m</td>
-<td class="px-md py-md text-on-surface-variant font-label-sm">Ieri, 18:20</td>
-<td class="px-md py-md text-right">
-<button class="material-symbols-outlined text-outline hover:text-primary transition-colors" data-icon="more_vert">more_vert</button>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors">
-<td class="px-md py-md">
-<div class="flex items-center gap-sm">
-<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center font-label-sm">GV</div>
-<span class="font-body-md text-on-surface">Giulia Verdi</span>
-</div>
-</td>
-<td class="px-md py-md">
-<span class="font-body-md">Toelettatura</span>
-</td>
-<td class="px-md py-md font-body-md">2h 00m</td>
-<td class="px-md py-md text-on-surface-variant font-label-sm">28 Ott, 11:00</td>
-<td class="px-md py-md text-right">
-<button class="material-symbols-outlined text-outline hover:text-primary transition-colors" data-icon="more_vert">more_vert</button>
-</td>
-</tr>
-</tbody>
-</table>
+<div id="recent-activities-container" class="p-md space-y-md">
+    <!-- Rendered via JS as cards -->
 </div>
 <div class="p-md bg-surface-container-low text-center">
 <a class="font-label-md text-primary hover:underline" href="javascript:void(0)">Carica altre attività</a>

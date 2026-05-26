@@ -4,10 +4,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const longestWalkMeta = document.getElementById('longest-walk-meta');
     const bestCaregiverName = document.getElementById('best-caregiver-name');
     const bestCaregiverMeta = document.getElementById('best-caregiver-meta');
-    const recentTableBody = document.querySelector('tbody');
+    const recentActivitiesContainer = document.getElementById('recent-activities-container');
     const teamRankingList = document.querySelector('.lg\\:col-span-1 .space-y-lg');
     const loadMoreBtn = document.querySelector('.p-md.bg-surface-container-low a');
-    const dateRangeSpan = document.getElementById('date-range-display');
+    const dateFromInput = document.getElementById('date-from');
+    const dateToInput = document.getElementById('date-to');
     const trendingSpan = document.querySelector('.mt-md.flex.items-center.gap-xs.text-secondary .font-label-sm');
     const fasciaFilterContainer = document.getElementById('fascia-filter-container');
 
@@ -30,6 +31,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadReports() {
         if (!window.supabaseClient) return;
 
+        // Inizializza date default (ultimi 14 giorni)
+        const end = new Date();
+        const start = new Date();
+        start.setDate(end.getDate() - 14);
+
+        if (dateFromInput) dateFromInput.value = start.toISOString().split('T')[0];
+        if (dateToInput) dateToInput.value = end.toISOString().split('T')[0];
+
         // Recupera tutte le passeggiate per le statistiche generali
         const { data: walks, error } = await window.supabaseClient
             .from('walks')
@@ -38,11 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (walks) {
             allWalks = walks;
-
-            // Filtra per gli ultimi 60 giorni per il contesto AI
-            const sixtyDaysAgo = new Date();
-            sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-            last60DaysWalks = walks.filter(w => new Date(w.walk_date) >= sixtyDaysAgo);
 
             // Recupera sessioni attive
             const { data: sessions } = await window.supabaseClient
@@ -104,9 +108,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (generateReportBtn) generateReportBtn.disabled = true;
 
         try {
-            const dataContext = { walks: last60DaysWalks, activeSessions: activeSessions };
+            const filtered = getFilteredData();
+            const dateRangeText = `Sto considerando solo il periodo dal ${dateFromInput.value} al ${dateToInput.value}.`;
+            const dataContext = { walks: filtered, activeSessions: activeSessions, dateRange: dateRangeText };
             const answer = await window.aiService.askAI(question, dataContext, chatHistory);
-            addMessage('ai', answer);
+            addMessage('ai', (chatHistory.length <= 2 ? dateRangeText + "\n\n" : "") + answer);
         } catch (error) {
             addMessage('ai', "Ops! " + error.message);
         } finally {
@@ -124,9 +130,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         sendChatBtn.disabled = true;
 
         try {
-            const dataContext = { walks: last60DaysWalks, activeSessions: activeSessions };
+            const filtered = getFilteredData();
+            const dateRangeText = `Report basato sul periodo ${dateFromInput.value} - ${dateToInput.value}.`;
+            const dataContext = { walks: filtered, activeSessions: activeSessions, dateRange: dateRangeText };
             const report = await window.aiService.generateAIReport(dataContext);
-            addMessage('ai', report);
+            addMessage('ai', dateRangeText + "\n\n" + report);
         } catch (error) {
             addMessage('ai', "Errore nella generazione del report: " + error.message);
         } finally {
@@ -136,11 +144,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function applyFiltersAndRender() {
+    function getFilteredData() {
         let filtered = allWalks;
 
+        if (dateFromInput && dateFromInput.value) {
+            filtered = filtered.filter(w => w.walk_date >= dateFromInput.value);
+        }
+        if (dateToInput && dateToInput.value) {
+            filtered = filtered.filter(w => w.walk_date <= dateToInput.value);
+        }
+
         if (currentFascia !== 'all') {
-            filtered = allWalks.filter(w => {
+            filtered = filtered.filter(w => {
                 const hour = parseInt(w.start_time.split(':')[0]);
                 if (currentFascia === 'morning') return hour < 12;
                 if (currentFascia === 'afternoon') return hour >= 12 && hour < 18;
@@ -148,6 +163,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return true;
             });
         }
+        return filtered;
+    }
+
+    function applyFiltersAndRender() {
+        const filtered = getFilteredData();
 
         updateMetrics(filtered);
         renderRecentTable(filtered.slice(0, currentLimit));
@@ -158,15 +178,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderPopularActivities(filtered);
     }
 
-    function updateDateRange(walks) {
-        if (!dateRangeSpan || walks.length === 0) return;
-        const dates = walks.map(w => new Date(w.walk_date));
-        const minDate = new Date(Math.min(...dates));
-        const maxDate = new Date(Math.max(...dates));
-
-        const options = { day: 'numeric', month: 'short' };
-        dateRangeSpan.textContent = `${minDate.toLocaleDateString('it-IT', options)} - ${maxDate.toLocaleDateString('it-IT', options)} ${maxDate.getFullYear()}`;
-    }
 
     function calculateDuration(startStr, endStr) {
         if (!startStr || !endStr) return 0;
@@ -212,30 +223,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderRecentTable(walks) {
-        if (!recentTableBody) return;
-        recentTableBody.innerHTML = '';
-        walks.forEach(w => {
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-surface-bright transition-colors';
-            const duration = calculateDuration(w.start_time, w.end_time);
+        if (!recentActivitiesContainer) return;
+        recentActivitiesContainer.innerHTML = '';
 
-            tr.innerHTML = `
-                <td class="px-md py-md">
+        if (walks.length === 0) {
+            recentActivitiesContainer.innerHTML = '<p class="text-center text-on-surface-variant py-md">Nessuna attività nel periodo selezionato.</p>';
+            return;
+        }
+
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+
+        walks.forEach(w => {
+            const duration = calculateDuration(w.start_time, w.end_time);
+            const hour = parseInt(w.start_time.split(':')[0]);
+            let fascia = 'Mattina';
+            if (hour >= 12 && hour < 18) fascia = 'Pomeriggio';
+            if (hour >= 18) fascia = 'Sera';
+
+            // Calcolo Stato
+            let status = 'Programmata';
+            const startMins = parseInt(w.start_time.split(':')[0]) * 60 + parseInt(w.start_time.split(':')[1]);
+            const endMins = parseInt(w.end_time.split(':')[0]) * 60 + parseInt(w.end_time.split(':')[1]);
+
+            if (w.walk_date < todayStr) {
+                status = 'Completata';
+            } else if (w.walk_date === todayStr) {
+                if (currentTime > endMins) status = 'Completata';
+                else if (currentTime >= startMins) status = 'In corso';
+            }
+
+            const statusColors = {
+                'Completata': 'bg-green-100 text-green-700',
+                'In corso': 'bg-blue-100 text-blue-700 animate-pulse',
+                'Programmata': 'bg-surface-container-high text-on-surface-variant'
+            };
+
+            const card = document.createElement('div');
+            card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant hover:border-primary/30 transition-all group';
+            card.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-md">
                     <div class="flex items-center gap-sm">
-                        <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center font-label-sm">
+                        <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold shadow-sm">
                             ${(w.profiles?.full_name || 'U').substring(0, 2).toUpperCase()}
                         </div>
-                        <span class="font-body-md text-on-surface">${w.profiles?.full_name || 'Utente'}</span>
+                        <div>
+                            <p class="font-headline-md text-sm md:text-base text-primary">${w.profiles?.full_name || 'Utente'}</p>
+                            <p class="text-on-surface-variant text-xs">${new Date(w.walk_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                        </div>
                     </div>
-                </td>
-                <td class="px-md py-md"><span class="font-body-md">${w.notes || 'Passeggiata'}</span></td>
-                <td class="px-md py-md font-body-md">${Math.floor(duration / 60)}h ${duration % 60}m</td>
-                <td class="px-md py-md text-on-surface-variant font-label-sm">${w.walk_date} ${w.start_time}</td>
-                <td class="px-md py-md text-right">
-                    <button class="material-symbols-outlined text-outline hover:text-primary transition-colors">more_vert</button>
-                </td>
+
+                    <div class="grid grid-cols-2 sm:flex sm:items-center gap-md md:gap-lg">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] uppercase text-secondary font-label-sm">Orario</span>
+                            <span class="font-body-md text-sm">${w.start_time} - ${w.end_time}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] uppercase text-secondary font-label-sm">Durata</span>
+                            <span class="font-body-md text-sm">${duration} min</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] uppercase text-secondary font-label-sm">Fascia</span>
+                            <span class="font-body-md text-sm">${fascia}</span>
+                        </div>
+                        <div class="flex flex-col items-start sm:items-end">
+                            <span class="px-sm py-xs rounded-full text-[10px] font-bold ${statusColors[status]}">${status}</span>
+                        </div>
+                    </div>
+                </div>
+                ${w.notes ? `<div class="mt-md pt-md border-t border-outline-variant/30 text-sm text-on-surface-variant italic">"${w.notes}"</div>` : ''}
             `;
-            recentTableBody.appendChild(tr);
+            recentActivitiesContainer.appendChild(card);
         });
     }
 
@@ -442,6 +501,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             applyFiltersAndRender();
         });
     }
+
+    if (dateFromInput) dateFromInput.onchange = applyFiltersAndRender;
+    if (dateToInput) dateToInput.onchange = applyFiltersAndRender;
 
     loadReports();
 });
