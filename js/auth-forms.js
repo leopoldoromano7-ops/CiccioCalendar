@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.disabled = false;
                 btn.textContent = 'Registrati';
             } else {
-                alert('Registrazione avvenuta con successo! Controlla la tua email per confermare l\'account.');
-                window.location.href = 'login.html';
+                alert('Registrazione avvenuta con successo! Ora puoi accedere.');
+                window.location.href = 'login.html?registered=true';
             }
         });
     }
