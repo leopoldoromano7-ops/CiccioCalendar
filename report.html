@@ -124,10 +124,46 @@
 <script src="js/auth.js"></script>
 <script src="js/header.js"></script>
 <script src="js/footer.js"></script>
+<script src="js/services/ollama.js"></script>
 <script src="js/report.js"></script>
 <!-- TopAppBar -->
 <div id="header-container"></div>
 <main class="max-w-7xl mx-auto px-margin-desktop py-xl">
+<!-- AI Report Box -->
+<section id="ai-report-section" class="mb-xl">
+    <div class="bg-surface-container-lowest p-md rounded-xl soft-shadow border border-primary/10 overflow-hidden relative">
+        <div class="flex items-center justify-between mb-md">
+            <div class="flex items-center gap-md">
+                <div class="w-12 h-12 rounded-full bg-surface-container-high p-2 flex items-center justify-center border border-outline-variant">
+                    <img src="favicon.svg" alt="Ciccio AI" class="w-full h-full object-contain">
+                </div>
+                <div>
+                    <h2 class="font-headline-md text-primary">AI Report</h2>
+                    <p class="text-on-surface-variant font-label-sm">Analisi intelligente delle passeggiate di Ciccio</p>
+                </div>
+            </div>
+            <button id="regenerate-ai-report" class="flex items-center gap-xs px-md py-sm rounded-lg border border-outline-variant text-on-surface-variant font-label-md hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-[20px]">refresh</span>
+                Rigenera report AI
+            </button>
+        </div>
+
+        <div id="ai-report-content" class="prose prose-stone max-w-none">
+            <div id="ai-report-loading" class="flex flex-col items-center justify-center py-lg space-y-md">
+                <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-on-surface-variant font-body-md italic text-center">Ciccio sta analizzando i dati...</p>
+            </div>
+            <div id="ai-report-text" class="hidden text-on-surface font-body-md leading-relaxed whitespace-pre-line">
+                <!-- AI Generated Text goes here -->
+            </div>
+            <div id="ai-report-error" class="hidden flex flex-col items-center justify-center py-lg space-y-md text-center">
+                <span class="material-symbols-outlined text-error text-[48px]">warning</span>
+                <p id="ai-error-message" class="text-error font-body-md"></p>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Page Header & Filter -->
 <header class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
 <div>

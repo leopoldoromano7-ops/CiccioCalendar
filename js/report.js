@@ -10,6 +10,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateRangeSpan = document.getElementById('date-range-display');
     const trendingSpan = document.querySelector('.mt-md.flex.items-center.gap-xs.text-secondary .font-label-sm');
     const fasciaFilterContainer = document.getElementById('fascia-filter-container');
+    const aiReportLoading = document.getElementById('ai-report-loading');
+    const aiReportText = document.getElementById('ai-report-text');
+    const aiReportError = document.getElementById('ai-report-error');
+    const aiErrorMessage = document.getElementById('ai-error-message');
+    const regenerateAiBtn = document.getElementById('regenerate-ai-report');
 
     let currentLimit = 5;
     let allWalks = [];
@@ -26,7 +31,89 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (walks) {
             allWalks = walks;
             applyFiltersAndRender();
+            generateAIAnalysis();
         }
+    }
+
+    async function generateAIAnalysis() {
+        if (!aiReportText || !window.ollamaService) return;
+
+        // Show loading
+        aiReportLoading.classList.remove('hidden');
+        aiReportText.classList.add('hidden');
+        aiReportError.classList.add('hidden');
+        if (regenerateAiBtn) regenerateAiBtn.disabled = true;
+
+        try {
+            const stats = calculateAIStats(allWalks);
+            const report = await window.ollamaService.generateAIReport(stats);
+
+            aiReportText.textContent = report;
+            aiReportText.classList.remove('hidden');
+        } catch (error) {
+            aiErrorMessage.textContent = error.message || 'Errore imprevisto nella generazione del report.';
+            aiReportError.classList.remove('hidden');
+        } finally {
+            aiReportLoading.classList.add('hidden');
+            if (regenerateAiBtn) regenerateAiBtn.disabled = false;
+        }
+    }
+
+    function calculateAIStats(walks) {
+        if (!walks || walks.length === 0) return { error: "Nessun dato disponibile." };
+
+        const now = new Date();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+        const currentWeekWalks = walks.filter(w => new Date(w.walk_date) >= oneWeekAgo);
+        const previousWeekWalks = walks.filter(w => {
+            const d = new Date(w.walk_date);
+            return d >= twoWeeksAgo && d < oneWeekAgo;
+        });
+
+        const getSummary = (data) => {
+            const caregiverStats = {};
+            let totalMinutes = 0;
+            const fasciaStats = { morning: 0, afternoon: 0, evening: 0 };
+            const dayStats = {};
+
+            data.forEach(w => {
+                const duration = calculateDuration(w.start_time, w.end_time);
+                totalMinutes += duration;
+
+                const name = w.profiles?.full_name || 'Utente';
+                if (!caregiverStats[name]) caregiverStats[name] = { count: 0, minutes: 0 };
+                caregiverStats[name].count++;
+                caregiverStats[name].minutes += duration;
+
+                const hour = parseInt(w.start_time.split(':')[0]);
+                if (hour < 12) fasciaStats.morning++;
+                else if (hour < 18) fasciaStats.afternoon++;
+                else fasciaStats.evening++;
+
+                const day = new Date(w.walk_date).toLocaleDateString('it-IT', { weekday: 'long' });
+                dayStats[day] = (dayStats[day] || 0) + 1;
+            });
+
+            return {
+                total_walks: data.length,
+                total_hours: (totalMinutes / 60).toFixed(1),
+                caregivers: Object.entries(caregiverStats).map(([name, s]) => ({
+                    nome: name,
+                    uscite: s.count,
+                    ore: (s.minutes / 60).toFixed(1)
+                })).sort((a, b) => b.uscite - a.uscite),
+                fasce_orarie: fasciaStats,
+                giorni_piu_attivi: Object.entries(dayStats).sort((a, b) => b[1] - a[1]).slice(0, 3)
+            };
+        };
+
+        return {
+            periodo_corrente: getSummary(currentWeekWalks),
+            periodo_precedente: getSummary(previousWeekWalks),
+            nota: "Il periodo corrente si riferisce agli ultimi 7 giorni. Il periodo precedente ai 7 giorni ancora prima."
+        };
     }
 
     function applyFiltersAndRender() {
@@ -297,6 +384,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             currentLimit += 5;
             applyFiltersAndRender();
         };
+    }
+
+    if (regenerateAiBtn) {
+        regenerateAiBtn.onclick = () => generateAIAnalysis();
     }
 
     if (fasciaFilterContainer) {
