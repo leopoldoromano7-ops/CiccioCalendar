@@ -1,0 +1,265 @@
+/**
+ * Servizio AI centrale per CiccioSheets.
+ * Gestisce la logica di risposta locale, il routing verso i provider (Ollama/Cloud)
+ * e la costruzione del contesto per l'AI.
+ */
+
+const aiService = {
+    /**
+     * Tenta di dare una risposta immediata basata sui dati reali senza chiamare l'AI.
+     * @param {string} question - La domanda dell'utente.
+     * @param {Object} data - I dati delle passeggiate e sessioni.
+     * @returns {string|null} - La risposta calcolata o null se complessa.
+     */
+    getSmartLocalAnswer(question, data) {
+        const q = question.toLowerCase();
+        const walks = data.walks || [];
+        const activeSessions = data.activeSessions || [];
+
+        // 1. Chi scende di più / Più passeggiate
+        if (q.includes('chi scende di più') || q.includes('più passeggiate') || q.includes('più uscite')) {
+            const counts = {};
+            walks.forEach(w => {
+                const name = w.profiles?.full_name || 'Utente';
+                counts[name] = (counts[name] || 0) + 1;
+            });
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            if (sorted.length === 0) return "Non ci sono ancora dati sulle passeggiate.";
+            return `${sorted[0][0]} è chi scende di più Ciccio con ${sorted[0][1]} passeggiate registrate negli ultimi 60 giorni.`;
+        }
+
+        // 2. Chi passa più tempo
+        if (q.includes('più tempo') || q.includes('chi passa più tempo')) {
+            const durations = {};
+            walks.forEach(w => {
+                const name = w.profiles?.full_name || 'Utente';
+                const start = new Date(`1970-01-01T${w.start_time}`);
+                const end = new Date(`1970-01-01T${w.end_time}`);
+                let diff = (end - start) / 60000;
+                if (diff < 0) diff += 1440;
+                durations[name] = (durations[name] || 0) + diff;
+            });
+            const sorted = Object.entries(durations).sort((a, b) => b[1] - a[1]);
+            if (sorted.length === 0) return "Non ci sono ancora dati sulla durata delle passeggiate.";
+            const hours = Math.floor(sorted[0][1] / 60);
+            const minutes = Math.round(sorted[0][1] % 60);
+            return `${sorted[0][0]} è chi passa più tempo con Ciccio: un totale di ${hours}h e ${minutes}m.`;
+        }
+
+        // 3. Fascia oraria più usata
+        if (q.includes('fascia oraria') || q.includes('orario più usato')) {
+            const fasce = { mattina: 0, pomeriggio: 0, sera: 0 };
+            walks.forEach(w => {
+                const hour = parseInt(w.start_time.split(':')[0]);
+                if (hour < 12) fasce.mattina++;
+                else if (hour < 18) fasce.pomeriggio++;
+                else fasce.sera++;
+            });
+            const sorted = Object.entries(fasce).sort((a, b) => b[1] - a[1]);
+            return `La fascia oraria più usata per le passeggiate di Ciccio è quella della ${sorted[0][0]} (${sorted[0][1]} volte).`;
+        }
+
+        // 4. Chi è in servizio oggi / Chi c'è oggi
+        if (q.includes('servizio oggi') || q.includes('chi c\'è oggi') || q.includes('chi è in servizio')) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayWalks = walks.filter(w => w.walk_date === todayStr);
+            const plannedNames = [...new Set(todayWalks.map(w => w.profiles?.full_name))].filter(Boolean);
+
+            const activeNames = activeSessions.map(s => s.profiles?.full_name).filter(Boolean);
+
+            let resp = "";
+            if (plannedNames.length > 0) {
+                resp += `Oggi sono pianificati: ${plannedNames.join(', ')}. `;
+            } else {
+                resp += "Non ci sono passeggiate pianificate per oggi. ";
+            }
+
+            if (activeNames.length > 0) {
+                resp += `Attualmente in corso: ${activeNames.join(', ')}.`;
+            } else {
+                resp += "Non ci sono sessioni attive in questo momento.";
+            }
+            return resp;
+        }
+
+        // 5. Slot scoperti / liberi
+        if (q.includes('slot scoperti') || q.includes('slot liberi') || q.includes('buchi')) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayWalks = walks.filter(w => w.walk_date === todayStr).sort((a,b) => a.start_time.localeCompare(b.start_time));
+
+            if (todayWalks.length === 0) return "Oggi sembra tutto scoperto! Non ci sono ancora passeggiate registrate.";
+
+            // Analisi semplificata: se non c'è nulla prima delle 10, o tra le 13 e le 16, etc.
+            // Per ora diciamo se ci sono meno di 3 passeggiate
+            if (todayWalks.length < 3) return `Oggi ci sono solo ${todayWalks.length} passeggiate. Potrebbero esserci degli slot scoperti.`;
+            return "Oggi la giornata sembra ben coperta con " + todayWalks.length + " passeggiate.";
+        }
+
+        return null; // Lascia decidere all'AI
+    },
+
+    /**
+     * Costruisce il contesto JSON da inviare all'AI con raggruppamenti temporali.
+     */
+    buildAIContext(data) {
+        const walks = data.walks || [];
+        const now = new Date();
+        const startOfThisWeek = new Date(now);
+        startOfThisWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+        startOfThisWeek.setHours(0,0,0,0);
+
+        const startOfLastWeek = new Date(startOfThisWeek);
+        startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+
+        const stats = {
+            currentWeek: { count: 0, hours: 0 },
+            lastWeek: { count: 0, hours: 0 },
+            caregivers: {}
+        };
+
+        walks.forEach(w => {
+            const walkDate = new Date(w.walk_date);
+            const duration = this.calculateMinutes(w.start_time, w.end_time) / 60;
+            const name = w.profiles?.full_name || 'Utente';
+
+            if (!stats.caregivers[name]) stats.caregivers[name] = { count: 0, hours: 0 };
+            stats.caregivers[name].count++;
+            stats.caregivers[name].hours += duration;
+
+            if (walkDate >= startOfThisWeek) {
+                stats.currentWeek.count++;
+                stats.currentWeek.hours += duration;
+            } else if (walkDate >= startOfLastWeek && walkDate < startOfThisWeek) {
+                stats.lastWeek.count++;
+                stats.lastWeek.hours += duration;
+            }
+        });
+
+        return {
+            totale_periodo_60_giorni: walks.length,
+            confronto_settimanale: {
+                questa_settimana: { uscite: stats.currentWeek.count, ore: stats.currentWeek.hours.toFixed(1) },
+                settimana_scorsa: { uscite: stats.lastWeek.count, ore: stats.lastWeek.hours.toFixed(1) }
+            },
+            classifica_accompagnatori: Object.entries(stats.caregivers).map(([nome, s]) => ({
+                nome, uscite: s.count, ore: s.hours.toFixed(1)
+            })).sort((a,b) => b.uscite - a.uscite),
+            ultime_5_passeggiate: walks.slice(0, 5).map(w => ({
+                data: w.walk_date, chi: w.profiles?.full_name, note: w.notes
+            }))
+        };
+    },
+
+    calculateMinutes(startStr, endStr) {
+        const start = new Date(`1970-01-01T${startStr}`);
+        const end = new Date(`1970-01-01T${endStr}`);
+        let diff = (end - start) / 60000;
+        if (diff < 0) diff += 1440;
+        return diff;
+    },
+
+    /**
+     * Invia una domanda all'AI (Ollama o Cloud).
+     */
+    async askAI(question, data, history = []) {
+        const config = window.APP_CONFIG;
+        const localAnswer = this.getSmartLocalAnswer(question, data);
+        const contextData = this.buildAIContext(data);
+
+        const prompt = `Sei il chatbot dell'app di Ciccio.
+Rispondi in italiano.
+Usa esclusivamente i dati JSON forniti.
+Non inventare nomi, orari, durate o statistiche.
+Se un dato non è disponibile, dillo chiaramente.
+Rispondi in modo breve, chiaro e utile.
+Massimo 5-8 righe.
+
+Domanda utente:
+${question}
+
+Risposta calcolata localmente, se disponibile:
+${localAnswer || "N/A"}
+
+Dati reali riassunti:
+${JSON.stringify(contextData, null, 2)}
+
+Cronologia recente:
+${history.map(h => `${h.role}: ${h.content}`).join('\n')}`;
+
+        if (config.AI_PROVIDER === 'ollama') {
+            return this.callOllama(prompt);
+        } else if (config.AI_PROVIDER === 'cloud') {
+            return this.callCloud(prompt);
+        } else {
+            if (localAnswer) return localAnswer + " (Nessun provider AI configurato)";
+            throw new Error("Nessun provider AI configurato");
+        }
+    },
+
+    async callOllama(prompt) {
+        const config = window.APP_CONFIG;
+        try {
+            const response = await fetch(config.OLLAMA_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.OLLAMA_MODEL,
+                    prompt: prompt,
+                    stream: false
+                })
+            });
+            if (!response.ok) throw new Error("Ollama non risponde correttamente");
+            const result = await response.json();
+            return result.response;
+        } catch (error) {
+            console.error("Errore Ollama:", error);
+            throw new Error("AI locale non disponibile. Assicurati che Ollama sia avviato.");
+        }
+    },
+
+    async callCloud(prompt) {
+        const config = window.APP_CONFIG;
+        if (!config.CLOUD_AI_ENDPOINT) {
+            throw new Error("Endpoint Cloud non configurato.");
+        }
+        // Placeholder per futura implementazione cloud
+        // La chiamata deve passare da un backend/proxy per non esporre chiavi
+        try {
+            const response = await fetch(config.CLOUD_AI_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            if (!response.ok) throw new Error("Il servizio Cloud non risponde");
+            const result = await response.json();
+            return result.answer || result.response;
+        } catch (error) {
+            console.error("Errore Cloud AI:", error);
+            throw new Error("AI cloud non disponibile.");
+        }
+    },
+
+    /**
+     * Genera il report automatico.
+     */
+    async generateAIReport(data) {
+        const contextData = this.buildAIContext(data);
+        const prompt = `Genera un report sintetico sulle passeggiate di Ciccio.
+Includi: riepilogo generale, classifica accompagnatori, chi ha fatto più passeggiate e chi ha passato più tempo, fasce orarie più usate, eventuali slot scoperti e suggerimenti pratici.
+Usa solo i dati forniti.
+
+Dati:
+${JSON.stringify(contextData, null, 2)}`;
+
+        const config = window.APP_CONFIG;
+        if (config.AI_PROVIDER === 'ollama') {
+            return this.callOllama(prompt);
+        } else if (config.AI_PROVIDER === 'cloud') {
+            return this.callCloud(prompt);
+        } else {
+            throw new Error("Nessun provider AI configurato per il report.");
+        }
+    }
+};
+
+window.aiService = aiService;
