@@ -38,15 +38,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const start = new Date();
         start.setDate(end.getDate() - 14);
 
-        if (dateFromInput) dateFromInput.value = start.toISOString().split('T')[0];
-        if (dateToInput) dateToInput.value = end.toISOString().split('T')[0];
+        if (dateFromInput && !dateFromInput.value) dateFromInput.value = start.toISOString().split('T')[0];
+        if (dateToInput && !dateToInput.value) dateToInput.value = end.toISOString().split('T')[0];
 
         // 1. Recupera sessioni concluse (REALE)
+        // Filtriamo per range date già in query per efficienza
         const { data: sessions, error: sessErr } = await window.supabaseClient
             .from('walk_sessions')
             .select('*, profiles(full_name), walks(start_time, end_time, notes)')
             .eq('is_active', false)
             .not('ended_at', 'is', null)
+            .gte('started_at', `${dateFromInput.value}T00:00:00`)
+            .lte('started_at', `${dateToInput.value}T23:59:59`)
             .order('started_at', { ascending: false });
 
         if (sessions) {
@@ -342,6 +345,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (hour >= 12 && hour < 18) fascia = 'Pomeriggio';
             if (hour >= 18) fascia = 'Sera';
 
+            // Badge logic
+            let badgeText = "Timbrata";
+            let badgeClass = "bg-green-100 text-green-700";
+            if (s.is_manual || s.source === 'manual') {
+                badgeText = "Manuale";
+                badgeClass = "bg-blue-100 text-blue-700";
+            } else if (s.walk_id) {
+                badgeText = "Da prenotazione";
+                badgeClass = "bg-purple-100 text-purple-700";
+            }
+
             const card = document.createElement('div');
             card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant hover:border-primary/30 transition-all group';
             card.innerHTML = `
@@ -353,7 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div>
                             <div class="flex items-center gap-2">
                                 <p class="font-headline-md text-sm md:text-base text-primary">${s.profiles?.full_name || 'Utente'}</p>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">Timbrata</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeClass}">${badgeText}</span>
                             </div>
                             <p class="text-on-surface-variant text-xs">${start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                         </div>
@@ -592,8 +606,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    if (dateFromInput) dateFromInput.onchange = applyFiltersAndRender;
-    if (dateToInput) dateToInput.onchange = applyFiltersAndRender;
+    if (dateFromInput) dateFromInput.onchange = loadReports;
+    if (dateToInput) dateToInput.onchange = loadReports;
 
     loadReports();
 });

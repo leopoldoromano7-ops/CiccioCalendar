@@ -306,6 +306,7 @@
 
         // Atmospheric micro-interaction: Subtle parallax on shift cards
         document.addEventListener('mousemove', (e) => {
+            if (window.innerWidth < 768) return; // Disable on mobile
             const cards = document.querySelectorAll('.group');
             const mouseX = e.clientX;
             const mouseY = e.clientY;

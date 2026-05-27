@@ -25,23 +25,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     let currentFascia = 'all';
-    let allShifts = [];
+    let allShifts = []; // Unified list of activities
     let currentUser = null;
 
-    // Load shifts for the day
+    // Load shifts and sessions for the day
     async function loadShifts() {
         if (!window.supabaseClient) return;
 
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         currentUser = user;
 
-        const { data, error } = await window.supabaseClient
+        // Fetch bookings
+        const { data: walks, error: wErr } = await window.supabaseClient
             .from('walks')
             .select('*, profiles(full_name)')
             .eq('walk_date', selectedDate);
 
-        if (error) console.error('Error loading shifts:', error);
-        allShifts = data || [];
+        if (wErr) console.error('Error loading walks:', wErr);
+
+        // Fetch real sessions for the same day
+        const dayStart = `${selectedDate}T00:00:00`;
+        const dayEnd = `${selectedDate}T23:59:59`;
+        const { data: sessions, error: sErr } = await window.supabaseClient
+            .from('walk_sessions')
+            .select('*, profiles(full_name)')
+            .gte('started_at', dayStart)
+            .lte('started_at', dayEnd);
+
+        if (sErr) console.error('Error loading sessions:', sErr);
+
+        // Merge into unified activities
+        const unified = [];
+        const walkMap = {};
+
+        (walks || []).forEach(w => {
+            const act = { ...w, type: 'walk', sessions: [] };
+            unified.push(act);
+            walkMap[w.id] = act;
+        });
+
+        (sessions || []).forEach(s => {
+            if (s.walk_id && walkMap[s.walk_id]) {
+                walkMap[s.walk_id].sessions.push(s);
+            } else {
+                // Free session
+                const startTime = new Date(s.started_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const endTime = s.ended_at ? new Date(s.ended_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false }) : window.CiccioUtils.addMinutesToTime(startTime, 30);
+                unified.push({
+                    ...s,
+                    type: 'session',
+                    start_time: startTime,
+                    end_time: endTime,
+                    walk_date: selectedDate
+                });
+            }
+        });
+
+        allShifts = unified;
         renderAll();
     }
 
@@ -79,11 +119,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         applyViewFilter();
     }
 
-    function renderMobileList(walks) {
+    function renderMobileList(activities) {
         if (!mobileListView) return;
         mobileListView.innerHTML = '';
 
-        if (walks.length === 0) {
+        if (activities.length === 0) {
             mobileListView.innerHTML = `
                 <div class="p-xl text-center w-full">
                     <span class="material-symbols-outlined text-outline text-[48px] mb-md">event_busy</span>
@@ -93,35 +133,48 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        walks.sort((a,b) => a.start_time.localeCompare(b.start_time)).forEach(walk => {
-            const isOwner = currentUser && walk.assigned_user_id === currentUser.id;
-            const duration = calculateDuration(walk.start_time, walk.end_time);
+        activities.sort((a,b) => a.start_time.localeCompare(b.start_time)).forEach(act => {
+            const isWalk = act.type === 'walk';
+            const hasSession = isWalk ? act.sessions.length > 0 : true;
+            const isOwner = currentUser && (isWalk ? act.assigned_user_id === currentUser.id : act.created_by === currentUser.id);
+
+            const duration = calculateDuration(act.start_time, act.end_time);
             const card = document.createElement('div');
-            card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant shadow-sm cursor-pointer hover:border-primary/30 transition-all w-full box-border';
-            card.onclick = () => window.openDetailModal(walk.id);
+            card.className = `bg-surface-container-low rounded-xl p-md border border-outline-variant shadow-sm cursor-pointer hover:border-primary/30 transition-all w-full box-border active:scale-[0.98] min-h-[120px] touch-manipulation ${hasSession ? 'border-l-4 border-l-green-500' : ''}`;
+            card.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isWalk) window.openDetailModal(act.id);
+                else window.openDetailModal(null, act.id);
+            };
+
+            let badge = '';
+            if (isOwner) badge = `<span class="px-2 py-0.5 bg-primary text-on-primary text-[10px] rounded-full font-bold uppercase">MIA</span>`;
+            else if (hasSession) badge = `<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded-full font-bold uppercase">TIMBRATA</span>`;
+
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-md">
+                <div class="flex justify-between items-start mb-md pointer-events-none">
                     <div class="flex items-center gap-sm">
                         <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-sm">
-                            ${(walk.profiles?.full_name || 'U').substring(0, 2).toUpperCase()}
+                            ${(act.profiles?.full_name || 'U').substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                            <p class="font-label-md text-primary leading-none mb-1">${walk.profiles?.full_name || 'Utente'}</p>
+                            <p class="font-label-md text-primary leading-none mb-1">${act.profiles?.full_name || 'Utente'}</p>
                             <p class="text-[11px] text-on-surface-variant">Accompagnatore</p>
                         </div>
                     </div>
-                    ${isOwner ? `<span class="px-2 py-0.5 bg-primary text-on-primary text-[10px] rounded-full font-bold">MIA</span>` : ''}
+                    ${badge}
                 </div>
                 <div class="space-y-sm">
                     <div class="flex items-center justify-between text-secondary">
                         <div class="flex items-center gap-xs">
                             <span class="material-symbols-outlined text-[18px]">schedule</span>
-                            <span class="font-label-sm">${window.CiccioUtils.formatCardLabel(walk.start_time, walk.profiles?.full_name)}</span>
+                            <span class="font-label-sm">${window.CiccioUtils.formatCardLabel(act.start_time, act.profiles?.full_name)}</span>
                         </div>
                         <span class="font-label-sm bg-surface-container px-2 py-1 rounded-md">${duration} min</span>
                     </div>
                     <div class="bg-surface-container-highest p-sm rounded-lg">
-                         <p class="font-body-md text-on-surface leading-tight">${walk.notes || 'Passeggiata con Ciccio'}</p>
+                         <p class="font-body-md text-on-surface leading-tight">${act.notes || (isWalk ? 'Passeggiata programmata' : 'Passeggiata libera')}</p>
                     </div>
                 </div>
             `;
@@ -133,16 +186,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         return window.CiccioUtils.calculateDurationMinutes(startStr, endStr);
     }
 
-    function renderTimeline(walks) {
+    function renderTimeline(activities) {
         if (!timelineContainer) return;
         document.querySelectorAll('.absolute-shift-block').forEach(el => el.remove());
 
-        walks.forEach(walk => {
-            const [startH, startM] = walk.start_time.split(':').map(Number);
-            const duration = calculateDuration(walk.start_time, walk.end_time);
+        activities.forEach(act => {
+            const isWalk = act.type === 'walk';
+            const hasSession = isWalk ? act.sessions.length > 0 : true;
+
+            const [startH, startM] = act.start_time.split(':').map(Number);
+            const duration = calculateDuration(act.start_time, act.end_time);
 
             const top = (startH * 64) + (startM * 64 / 60);
-            const height = Math.max(32, (duration * 64 / 60)); // Min height for visibility
+            const height = Math.max(32, (duration * 64 / 60));
 
             const block = document.createElement('div');
             block.className = 'absolute left-[60px] right-0 px-2 py-1 absolute-shift-block';
@@ -150,19 +206,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             block.style.height = `${height}px`;
             block.style.zIndex = '20';
 
-            const isOwner = currentUser && walk.assigned_user_id === currentUser.id;
+            const isOwner = currentUser && (isWalk ? act.assigned_user_id === currentUser.id : act.created_by === currentUser.id);
+            const borderColor = hasSession ? 'border-green-500' : 'border-secondary';
+            const bgColor = hasSession ? 'bg-green-50' : 'bg-surface-container-high';
 
             block.innerHTML = `
-                <div class="w-full h-full bg-surface-container-high rounded-lg border-l-4 border-secondary p-2 shadow-sm hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer group relative overflow-hidden ${isOwner ? 'draggable' : ''}"
-                     ${isOwner ? `draggable="true" data-id="${walk.id}"` : ''} onclick="openDetailModal('${walk.id}')">
-                    <div class="flex justify-between items-start h-full">
+                <div class="w-full h-full ${bgColor} rounded-lg border-l-4 ${borderColor} p-2 shadow-sm hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer group relative overflow-hidden touch-manipulation ${isOwner && isWalk ? 'draggable' : ''}"
+                     ${isOwner && isWalk ? `draggable="true" data-id="${act.id}"` : ''}
+                     onclick="event.stopPropagation(); ${isWalk ? `openDetailModal('${act.id}')` : `openDetailModal(null, '${act.id}')`}">
+                    <div class="flex justify-between items-start h-full pointer-events-none">
                         <div class="flex flex-col h-full justify-between min-w-0">
                             <div>
-                                <p class="font-label-md text-primary font-bold truncate leading-tight">${window.CiccioUtils.formatCardLabel(walk.start_time, walk.profiles?.full_name)}</p>
-                                <p class="font-label-sm text-on-surface-variant text-[11px]">${walk.start_time.substring(0,5)} - ${walk.end_time?.substring(0,5)}</p>
+                                <p class="font-label-md text-primary font-bold truncate leading-tight">${window.CiccioUtils.formatCardLabel(act.start_time, act.profiles?.full_name)}</p>
+                                <p class="font-label-sm text-on-surface-variant text-[11px]">${act.start_time.substring(0,5)} - ${act.end_time?.substring(0,5)}</p>
                             </div>
-                            <p class="font-body-md text-on-surface-variant text-[10px] truncate ${height < 50 ? 'hidden' : ''}">${walk.notes || ''}</p>
+                            <p class="font-body-md text-on-surface-variant text-[10px] truncate ${height < 50 ? 'hidden' : ''}">${act.notes || ''}</p>
                         </div>
+                        ${hasSession ? '<span class="material-symbols-outlined text-green-600 text-sm">verified</span>' : ''}
                     </div>
                 </div>
             `;
@@ -388,6 +448,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             const reminderOn = document.getElementById('reminder-enabled')?.checked || false;
             const reminderMin = parseInt(document.getElementById('reminder-minutes')?.value || '30');
             const walkId = shiftForm.dataset.id;
+            const sessionId = shiftForm.dataset.sessionId;
+
+            // If we are updating a session, only update notes
+            if (sessionId) {
+                const { error } = await window.supabaseClient
+                    .from('walk_sessions')
+                    .update({ notes: notes })
+                    .eq('id', sessionId);
+
+                if (error) {
+                    if (window.showToast) window.showToast('Errore aggiornamento sessione: ' + error.message, 'error');
+                } else {
+                    window.closeModal();
+                    loadShifts();
+                    if (window.showToast) window.showToast('Note sessione aggiornate');
+                }
+                return;
+            }
 
             // Strict validation
             if (!startTime || !endTime) {
@@ -453,25 +531,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    window.openDetailModal = (id) => {
-        const walk = allShifts.find(w => w.id == id);
-        if (!walk) return;
+    window.openDetailModal = (walkId, sessionId) => {
+        let activity = null;
+        if (walkId) activity = allShifts.find(a => a.type === 'walk' && a.id == walkId);
+        else if (sessionId) activity = allShifts.find(a => a.type === 'session' && a.id == sessionId);
 
-        const isOwner = currentUser && walk.assigned_user_id === currentUser.id;
+        if (!activity) return;
+
+        const isOwner = currentUser && (activity.type === 'walk' ? activity.assigned_user_id === currentUser.id : activity.created_by === currentUser.id);
 
         // Reset modal state
         shiftForm.reset();
-        shiftForm.dataset.id = id;
+        if (walkId) shiftForm.dataset.id = walkId;
+        else delete shiftForm.dataset.id;
+
+        if (sessionId) shiftForm.dataset.sessionId = sessionId;
+        else delete shiftForm.dataset.sessionId;
 
         const modalTitle = document.querySelector('#shiftModal h2');
         const submitBtn = shiftForm.querySelector('button[type="submit"]');
         const deleteBtn = document.getElementById('modal-delete-btn');
 
+        // Remove existing source badges
+        const existingBadge = document.getElementById('modal-source-badge');
+        if (existingBadge) existingBadge.remove();
+
         if (isOwner) {
-            modalTitle.textContent = 'Modifica Attività';
+            modalTitle.textContent = activity.type === 'session' ? 'Modifica Sessione' : 'Modifica Prenotazione';
             submitBtn.textContent = 'Salva Modifiche';
             submitBtn.classList.remove('hidden');
-            if (deleteBtn) deleteBtn.classList.remove('hidden');
+            if (deleteBtn) {
+                deleteBtn.classList.remove('hidden');
+                deleteBtn.textContent = activity.type === 'session' ? 'Elimina Sessione' : 'Elimina Prenotazione';
+            }
         } else {
             modalTitle.textContent = 'Dettaglio Attività';
             submitBtn.classList.add('hidden');
@@ -480,23 +572,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Fill data
         const inputs = shiftForm.querySelectorAll('input');
-        inputs[0].value = walk.start_time.substring(0, 5);
-        inputs[1].value = walk.end_time?.substring(0, 5) || '';
-        inputs[2].value = walk.notes || '';
+        inputs[0].value = activity.start_time.substring(0, 5);
+        inputs[1].value = activity.end_time?.substring(0, 5) || '';
+        inputs[2].value = activity.notes || '';
 
         // Reminders
         if (reminderEnabled) {
-            reminderEnabled.checked = walk.reminder_enabled || false;
+            reminderEnabled.checked = activity.reminder_enabled || false;
             if (reminderEnabled.checked) reminderOptions?.classList.remove('hidden');
             else reminderOptions?.classList.add('hidden');
+            reminderEnabled.disabled = !isOwner || activity.type === 'session';
         }
         const reminderMinutesEl = document.getElementById('reminder-minutes');
-        if (reminderMinutesEl) reminderMinutesEl.value = walk.reminder_minutes_before || '30';
+        if (reminderMinutesEl) {
+            reminderMinutesEl.value = activity.reminder_minutes_before || '30';
+            reminderMinutesEl.disabled = !isOwner || activity.type === 'session';
+        }
 
-        // Read-only if not owner
-        inputs.forEach(i => i.readOnly = !isOwner);
-        if (reminderEnabled) reminderEnabled.disabled = !isOwner;
-        if (reminderMinutesEl) reminderMinutesEl.disabled = !isOwner;
+        // Read-only if not owner or if it's a concluded session
+        const isConcluded = activity.type === 'session' || (activity.sessions && activity.sessions.length > 0);
+        inputs[0].readOnly = !isOwner || isConcluded;
+        inputs[1].readOnly = !isOwner || isConcluded;
+        inputs[2].readOnly = !isOwner;
 
         // Add extra info for detail view
         let detailInfo = document.getElementById('modal-detail-info');
@@ -507,40 +604,61 @@ document.addEventListener('DOMContentLoaded', async () => {
             shiftForm.insertBefore(detailInfo, shiftForm.querySelector('.pt-md'));
         }
 
-        const duration = calculateDuration(walk.start_time, walk.end_time);
-        const dateObj = window.CiccioUtils.parseLocalDateTime(walk.walk_date);
+        const duration = calculateDuration(activity.start_time, activity.end_time);
+        const dateObj = window.CiccioUtils.parseLocalDateTime(selectedDate);
 
         detailInfo.innerHTML = `
-            <div class="flex justify-between"><span class="text-on-surface-variant">Accompagnatore:</span> <span class="font-bold">${walk.profiles?.full_name}</span></div>
+            <div class="flex justify-between"><span class="text-on-surface-variant">Accompagnatore:</span> <span class="font-bold">${activity.profiles?.full_name}</span></div>
             <div class="flex justify-between"><span class="text-on-surface-variant">Data:</span> <span>${window.CiccioUtils.formatDisplayDate(dateObj)}</span></div>
-            <div class="flex justify-between"><span class="text-on-surface-variant">Durata programmata:</span> <span>${duration} minuti</span></div>
+            <div class="flex justify-between"><span class="text-on-surface-variant">Durata ${activity.type === 'walk' ? 'programmata' : 'reale'}:</span> <span>${duration} minuti</span></div>
         `;
 
-        // Check for real data if linked to a session
-        async function fetchRealData() {
-            const { data: sessions } = await window.supabaseClient
-                .from('walk_sessions')
-                .select('*')
-                .eq('walk_id', id)
-                .order('created_at', { ascending: false });
-
-            if (sessions && sessions.length > 0) {
-                const s = sessions[0];
+        if (activity.type === 'walk' && activity.sessions.length > 0) {
+             // Show real data for walk with sessions
+             activity.sessions.forEach((s, idx) => {
                 const realStart = new Date(s.started_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false });
                 const realEnd = s.ended_at ? new Date(s.ended_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'In corso';
 
                 const realDataEl = document.createElement('div');
-                realDataEl.className = 'pt-2 mt-2 border-t border-dashed border-outline-variant text-primary';
+                realDataEl.className = `pt-2 mt-2 border-t border-dashed border-outline-variant text-primary`;
                 realDataEl.innerHTML = `
-                    <div class="font-bold text-xs uppercase text-secondary mb-1">Dati Reali (Timbratura)</div>
-                    <div class="flex justify-between"><span>Inizio:</span> <span>${realStart}</span></div>
-                    <div class="flex justify-between"><span>Fine:</span> <span>${realEnd}</span></div>
+                    <div class="font-bold text-xs uppercase text-secondary mb-1">Dati Reali (Timbratura ${idx+1})</div>
+                    <div class="flex justify-between"><span>Inizio reale:</span> <span>${realStart}</span></div>
+                    <div class="flex justify-between"><span>Fine reale:</span> <span>${realEnd}</span></div>
                     ${s.duration_minutes ? `<div class="flex justify-between"><span>Durata reale:</span> <span>${s.duration_minutes} min</span></div>` : ''}
                 `;
                 detailInfo.appendChild(realDataEl);
-            }
+
+                // Add source badge for the first session
+                if (idx === 0) {
+                    let sourceLabel = 'Timer';
+                    if (s.is_manual || s.source === 'manual') sourceLabel = 'Manuale';
+                    else if (s.walk_id) sourceLabel = 'Da prenotazione';
+
+                    const badge = document.createElement('span');
+                    badge.id = 'modal-source-badge';
+                    badge.className = 'px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] rounded-full font-bold ml-2';
+                    badge.textContent = sourceLabel;
+                    modalTitle.after(badge);
+                }
+             });
+        } else if (activity.type === 'session') {
+             // Badge for free session
+             let sourceLabel = 'Timer';
+             if (activity.is_manual || activity.source === 'manual') sourceLabel = 'Manuale';
+             const badge = document.createElement('span');
+             badge.id = 'modal-source-badge';
+             badge.className = 'px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] rounded-full font-bold ml-2';
+             badge.textContent = sourceLabel;
+             modalTitle.after(badge);
+        } else {
+             // Simple walk without sessions
+             const badge = document.createElement('span');
+             badge.id = 'modal-source-badge';
+             badge.className = 'px-2 py-0.5 bg-surface-container-high text-on-surface-variant text-[10px] rounded-full font-bold ml-2';
+             badge.textContent = 'Programmata';
+             modalTitle.after(badge);
         }
-        fetchRealData();
 
         window.openModal();
     };
@@ -555,11 +673,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             delBtn.className = 'w-full bg-error/10 text-error py-sm rounded-lg font-label-md text-label-md hover:bg-error/20 transition-colors mt-2 hidden';
             delBtn.textContent = 'Elimina Prenotazione';
             delBtn.onclick = async () => {
-                if (confirm('Sicuro di voler eliminare questa attività?')) {
-                    const id = shiftForm.dataset.id;
-                    const { error } = await window.supabaseClient.from('walks').delete().eq('id', id);
+                const sessionId = shiftForm.dataset.sessionId;
+                const walkId = shiftForm.dataset.id;
+
+                const msg = sessionId ? 'Sicuro di voler eliminare questa sessione reale?' : 'Sicuro di voler eliminare questa prenotazione?';
+
+                if (confirm(msg)) {
+                    let error = null;
+                    if (sessionId) {
+                        const { error: err } = await window.supabaseClient.from('walk_sessions').delete().eq('id', sessionId);
+                        error = err;
+                    } else {
+                        const { error: err } = await window.supabaseClient.from('walks').delete().eq('id', walkId);
+                        error = err;
+                    }
+
                     if (!error) {
-                        if (window.showToast) window.showToast('Prenotazione eliminata');
+                        if (window.showToast) window.showToast(sessionId ? 'Sessione eliminata' : 'Prenotazione eliminata');
                         window.closeModal();
                         loadShifts();
                     } else {
