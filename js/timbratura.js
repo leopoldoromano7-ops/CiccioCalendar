@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusBadge = document.getElementById('statusBadge');
     const activeDetails = document.getElementById('activeDetails');
     const startTimeLabel = document.getElementById('startTimeLabel');
+    const viewMapBtn = document.getElementById('viewMapBtn');
     const historyList = document.querySelector('#historySection .space-y-sm');
 
     let activeSession = null;
@@ -55,6 +56,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         activeDetails.classList.remove('hidden');
         startTimeLabel.textContent = startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
+        if (activeSession && activeSession.tracking_enabled) {
+            viewMapBtn.classList.remove('hidden');
+            viewMapBtn.onclick = () => window.location.href = `maps.html?session_id=${activeSession.id}&mode=live`;
+        } else {
+            viewMapBtn.classList.add('hidden');
+        }
+
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => {
             const elapsed = Math.floor((new Date() - startTime) / 1000);
@@ -75,6 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         statusBadge.querySelector('span:last-child').textContent = 'Ciccio è a casa';
 
         activeDetails.classList.add('hidden');
+        viewMapBtn.classList.add('hidden');
     }
 
     function formatTime(seconds) {
@@ -133,7 +142,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 started_at: startTime.toISOString(),
                 created_by: user.id,
                 is_active: true,
-                source: 'timer'
+                source: 'timer',
+                tracking_enabled: true // Always enable tracking for live timer sessions
             };
             if (linkedBooking) insertData.walk_id = linkedBooking.id;
 

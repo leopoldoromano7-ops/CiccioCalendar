@@ -399,7 +399,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const duration = window.CiccioUtils.calculateDurationMinutes(startTime, endTime);
             if (duration <= 0) {
                 if (window.showToast) window.showToast('Imposta un orario valido.', 'error');
-                else alert('Imposta un orario valido.');
+
+                // Suggerisci automaticamente ora fine = ora inizio + 30 minuti
+                const suggestedEnd = window.CiccioUtils.addMinutesToTime(startTime, 30);
+                shiftForm.querySelector('input[type="time"]:last-of-type').value = suggestedEnd;
+                updateModalDuration();
                 return;
             }
 
@@ -543,7 +547,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Add Delete button to modal if it doesn't exist
     function ensureModalDeleteBtn() {
-        const footer = document.querySelector('#shiftModal .pt-md');
+        const footer = document.querySelector('#shiftModal .sticky.bottom-0');
         if (footer && !document.getElementById('modal-delete-btn')) {
             const delBtn = document.createElement('button');
             delBtn.id = 'modal-delete-btn';

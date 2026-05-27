@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const bestCaregiverName = document.getElementById('best-caregiver-name');
     const bestCaregiverMeta = document.getElementById('best-caregiver-meta');
     const recentActivitiesContainer = document.getElementById('recent-activities-container');
+    const trackedPathsContainer = document.getElementById('tracked-paths-container');
     const teamRankingList = document.querySelector('.lg\\:col-span-1 .space-y-lg');
     const loadMoreBtn = document.querySelector('.p-md.bg-surface-container-low a');
     const dateFromInput = document.getElementById('date-from');
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let allWalks = [];
     let last60DaysWalks = [];
     let activeSessions = [];
+    let trackedSessions = [];
     let currentFascia = 'all';
     let chatHistory = [];
 
@@ -55,6 +57,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .eq('is_active', true);
 
             activeSessions = sessions || [];
+
+            // Recupera sessioni con tracking (concluse o attive con dati)
+            const { data: trackSess } = await window.supabaseClient
+                .from('walk_sessions')
+                .select('*, profiles(full_name), walks(notes)')
+                .or('tracking_enabled.eq.true,distance_meters.gt.0,start_lat.not.is.null')
+                .order('started_at', { ascending: false });
+
+            trackedSessions = trackSess || [];
 
             applyFiltersAndRender();
         }
@@ -171,6 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         updateMetrics(filtered);
         renderRecentTable(filtered.slice(0, currentLimit));
+        renderTrackedPaths(trackedSessions);
         renderTeamRanking(filtered);
         setupRankingModal(filtered);
         renderWeeklyChart(filtered);
@@ -220,6 +232,63 @@ document.addEventListener('DOMContentLoaded', async () => {
             bestCaregiverName.textContent = sortedCaregivers[0][0];
             bestCaregiverMeta.textContent = `${sortedCaregivers[0][1]} uscite totali`;
         }
+    }
+
+    function renderTrackedPaths(sessions) {
+        if (!trackedPathsContainer) return;
+        trackedPathsContainer.innerHTML = '';
+
+        const filtered = sessions.filter(s => {
+            if (dateFromInput && dateFromInput.value) {
+                if (s.started_at.split('T')[0] < dateFromInput.value) return false;
+            }
+            if (dateToInput && dateToInput.value) {
+                if (s.started_at.split('T')[0] > dateToInput.value) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            trackedPathsContainer.innerHTML = '<div class="col-span-full py-xl text-center text-on-surface-variant italic">Nessun percorso trovato per il periodo selezionato.</div>';
+            return;
+        }
+
+        filtered.forEach(s => {
+            const date = new Date(s.started_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+            const dist = s.distance_meters ? (s.distance_meters / 1000).toFixed(2) + ' km' : '-- km';
+            const type = s.is_manual ? 'Manuale' : (s.walk_id ? 'Prenotato' : 'Libero');
+            const status = s.is_active ? 'In corso' : 'Completato';
+
+            const card = document.createElement('div');
+            card.className = 'bg-surface-container-low p-md rounded-xl border border-outline-variant hover:border-primary transition-all group cursor-pointer';
+            card.onclick = () => window.location.href = `maps.html?session_id=${s.id}&mode=history`;
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-sm">
+                    <div class="flex items-center gap-sm">
+                        <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs">
+                            ${(s.profiles?.full_name || 'U').substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                            <p class="font-label-md text-primary leading-tight">${s.profiles?.full_name || 'Utente'}</p>
+                            <p class="text-[10px] text-on-surface-variant">${date} · ${type}</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${s.is_active ? 'bg-green-100 text-green-700' : 'bg-surface-container-high text-on-surface-variant'}">${status}</span>
+                </div>
+                <div class="flex items-end justify-between mt-md">
+                    <div class="space-y-1">
+                        <p class="text-[10px] uppercase text-secondary font-label-sm">Distanza</p>
+                        <p class="font-headline-md text-primary">${dist}</p>
+                    </div>
+                    <div class="flex items-center gap-xs text-primary group-hover:translate-x-1 transition-transform">
+                        <span class="text-xs font-label-md">Vedi percorso</span>
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </div>
+                </div>
+            `;
+            trackedPathsContainer.appendChild(card);
+        });
     }
 
     function renderRecentTable(walks) {
