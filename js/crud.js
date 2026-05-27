@@ -2,12 +2,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const selectedDate = urlParams.get('date') || new Date().toISOString().split('T')[0];
 
-    // Parsing sicuro senza shift UTC
-    const [y, mon, d] = selectedDate.split('-').map(Number);
-    const displayDate = new Date(y, mon - 1, d);
+    // Parsing sicuro senza shift UTC tramite helper
+    const displayDate = window.CiccioUtils.parseLocalDateTime(selectedDate);
 
     const dateTitle = document.querySelector('h1');
-    if (dateTitle) dateTitle.textContent = displayDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (dateTitle) dateTitle.textContent = window.CiccioUtils.formatDisplayDate(displayDate);
 
     const timelineContainer = document.getElementById('timeline-grid');
     const mobileListView = document.getElementById('mobile-list-view');
@@ -41,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .select('*, profiles(full_name)')
             .eq('walk_date', selectedDate);
 
+        if (error) console.error('Error loading shifts:', error);
         allShifts = data || [];
         renderAll();
     }
@@ -49,14 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (fascia === 'all') return walks;
         const f = FASCE[fascia];
         return walks.filter(w => {
-            // Un'attività appare se l'intervallo [start, end] si sovrappone alla fascia
-            // O se inizia nella fascia, o se finisce nella fascia
+            // Richiesta: usare l'ora di inizio dell'attività
             const start = w.start_time.substring(0, 5);
-            const end = w.end_time?.substring(0, 5) || start;
-
-            return (start >= f.start && start <= f.end) ||
-                   (end >= f.start && end <= f.end) ||
-                   (start < f.start && end > f.end);
+            return start >= f.start && start <= f.end;
         });
     }
 
@@ -121,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="flex items-center justify-between text-secondary">
                         <div class="flex items-center gap-xs">
                             <span class="material-symbols-outlined text-[18px]">schedule</span>
-                            <span class="font-label-sm">${walk.start_time.substring(0,5)} - ${walk.end_time?.substring(0,5)}</span>
+                            <span class="font-label-sm">${window.CiccioUtils.formatCardLabel(walk.start_time, walk.profiles?.full_name)}</span>
                         </div>
                         <span class="font-label-sm bg-surface-container px-2 py-1 rounded-md">${duration} min</span>
                     </div>
@@ -135,14 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function calculateDuration(startStr, endStr) {
-        if (!startStr || !endStr) return 60;
-        const [h1, m1] = startStr.split(':').map(Number);
-        const [h2, m2] = endStr.split(':').map(Number);
-        const start = h1 * 60 + m1;
-        const end = h2 * 60 + m2;
-        let diff = end - start;
-        if (diff < 0) diff += 1440;
-        return diff;
+        return window.CiccioUtils.calculateDurationMinutes(startStr, endStr);
     }
 
     function renderTimeline(walks) {
@@ -170,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="flex justify-between items-start h-full">
                         <div class="flex flex-col h-full justify-between min-w-0">
                             <div>
-                                <p class="font-label-md text-primary font-bold truncate leading-tight">${walk.profiles?.full_name || 'Utente'}</p>
+                                <p class="font-label-md text-primary font-bold truncate leading-tight">${window.CiccioUtils.formatCardLabel(walk.start_time, walk.profiles?.full_name)}</p>
                                 <p class="font-label-sm text-on-surface-variant text-[11px]">${walk.start_time.substring(0,5)} - ${walk.end_time?.substring(0,5)}</p>
                             </div>
                             <p class="font-body-md text-on-surface-variant text-[10px] truncate ${height < 50 ? 'hidden' : ''}">${walk.notes || ''}</p>
@@ -186,7 +174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function setupDragAndDrop() {
         const draggables = document.querySelectorAll('.draggable');
-        const slots = document.querySelectorAll('.grid-cols-\\[60px_1fr\\] > div:nth-child(even)');
+        // Select only the interactive slots (the second div in each hour row)
+        const slots = document.querySelectorAll('#timeline-grid > div:nth-child(even)');
 
         draggables.forEach(d => {
             d.addEventListener('dragstart', (e) => {
@@ -199,7 +188,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         slots.forEach((slot, index) => {
             // Re-enable slots to be interactive
             slot.classList.add('cursor-pointer', 'hover:bg-surface-container-low', 'transition-colors');
-            slot.onclick = () => {
+            slot.onclick = (e) => {
+                // Prevent trigger when clicking on an existing card
+                if (e.target !== slot) return;
                 const hour = index < 10 ? `0${index}:00` : `${index}:00`;
                 openModalWithTime(hour);
             };
@@ -249,14 +240,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         const inputs = shiftForm.querySelectorAll('input');
         inputs.forEach(i => i.readOnly = false);
 
-        inputs[0].value = time;
-        // Default 1 hour later
-        const h = parseInt(time.split(':')[0]);
-        const nextH = (h + 1) % 24;
-        inputs[1].value = `${nextH < 10 ? '0'+nextH : nextH}:00`;
+        // Se time è fornito (click su slot), usa quello + 30 min
+        // Se time NON è fornito (bottone generale), usa ora attuale + 30 min
+        let startVal, endVal;
+        if (time) {
+            startVal = time;
+            endVal = window.CiccioUtils.addMinutesToTime(startVal, 30);
+        } else {
+            startVal = window.CiccioUtils.formatLocalTime(new Date());
+            endVal = window.CiccioUtils.addMinutesToTime(startVal, 30);
+        }
+
+        inputs[0].value = startVal;
+        inputs[1].value = endVal;
+
+        // Ensure detailInfo exists and is ready for dynamic duration
+        let di = document.getElementById('modal-detail-info');
+        if (!di) {
+            di = document.createElement('div');
+            di.id = 'modal-detail-info';
+            di.className = 'mt-4 pt-4 border-t border-outline-variant text-sm space-y-1';
+            shiftForm.insertBefore(di, shiftForm.querySelector('.pt-md'));
+        }
+        updateModalDuration();
 
         window.openModal();
     }
+
+    // Export to window to be callable from HTML button
+    window.openModalWithTime = openModalWithTime;
 
     function renderStaff(walks) {
         if (!staffList) return;
@@ -336,8 +348,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Handle Form Submit
+    // Update dynamic duration in modal
+    function updateModalDuration() {
+        const startTime = shiftForm.querySelector('input[type="time"]:first-of-type').value;
+        const endTime = shiftForm.querySelector('input[type="time"]:last-of-type').value;
+        const detailInfo = document.getElementById('modal-detail-info');
+        if (!detailInfo) return;
+
+        let durationEl = detailInfo.querySelector('.dynamic-duration');
+        if (!durationEl) {
+            durationEl = document.createElement('div');
+            durationEl.className = 'flex justify-between dynamic-duration font-bold text-primary pt-1 border-t border-dashed border-outline-variant mt-2';
+            detailInfo.appendChild(durationEl);
+        }
+
+        if (startTime && endTime) {
+            const duration = window.CiccioUtils.calculateDurationMinutes(startTime, endTime);
+            durationEl.innerHTML = `<span>Durata calcolata:</span> <span>${duration} minuti</span>`;
+        } else {
+            durationEl.innerHTML = `<span>Durata calcolata:</span> <span>--</span>`;
+        }
+    }
+
     if (shiftForm) {
+        const timeInputs = shiftForm.querySelectorAll('input[type="time"]');
+        timeInputs.forEach(input => {
+            input.addEventListener('change', updateModalDuration);
+            input.addEventListener('input', updateModalDuration);
+        });
+
         shiftForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const { data: { user } } = await window.supabaseClient.auth.getUser();
@@ -349,6 +388,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             const reminderOn = document.getElementById('reminder-enabled')?.checked || false;
             const reminderMin = parseInt(document.getElementById('reminder-minutes')?.value || '30');
             const walkId = shiftForm.dataset.id;
+
+            // Strict validation
+            if (!startTime || !endTime) {
+                if (window.showToast) window.showToast('Imposta un orario valido.', 'error');
+                else alert('Imposta un orario valido.');
+                return;
+            }
+
+            const duration = window.CiccioUtils.calculateDurationMinutes(startTime, endTime);
+            if (duration <= 0) {
+                if (window.showToast) window.showToast('Imposta un orario valido.', 'error');
+                else alert('Imposta un orario valido.');
+                return;
+            }
 
             let error = null;
             if (walkId) {
@@ -451,12 +504,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const duration = calculateDuration(walk.start_time, walk.end_time);
-        const [y, mon, d] = walk.walk_date.split('-').map(Number);
-        const dateObj = new Date(y, mon-1, d);
+        const dateObj = window.CiccioUtils.parseLocalDateTime(walk.walk_date);
 
         detailInfo.innerHTML = `
             <div class="flex justify-between"><span class="text-on-surface-variant">Accompagnatore:</span> <span class="font-bold">${walk.profiles?.full_name}</span></div>
-            <div class="flex justify-between"><span class="text-on-surface-variant">Data:</span> <span>${dateObj.toLocaleDateString('it-IT')}</span></div>
+            <div class="flex justify-between"><span class="text-on-surface-variant">Data:</span> <span>${window.CiccioUtils.formatDisplayDate(dateObj)}</span></div>
             <div class="flex justify-between"><span class="text-on-surface-variant">Durata programmata:</span> <span>${duration} minuti</span></div>
         `;
 
@@ -470,8 +522,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (sessions && sessions.length > 0) {
                 const s = sessions[0];
-                const realStart = new Date(s.started_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                const realEnd = s.ended_at ? new Date(s.ended_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 'In corso';
+                const realStart = new Date(s.started_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const realEnd = s.ended_at ? new Date(s.ended_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'In corso';
 
                 const realDataEl = document.createElement('div');
                 realDataEl.className = 'pt-2 mt-2 border-t border-dashed border-outline-variant text-primary';
