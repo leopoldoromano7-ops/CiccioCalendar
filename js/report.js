@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const chatSuggestions = document.getElementById('chat-suggestions');
 
     let currentLimit = 5;
-    let allWalks = [];
-    let last60DaysWalks = [];
+    let allSessions = []; // Concluded walk_sessions for stats/recent
+    let allWalks = []; // Planned walks for context/today
     let activeSessions = [];
     let trackedSessions = [];
     let currentFascia = 'all';
@@ -41,34 +41,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (dateFromInput) dateFromInput.value = start.toISOString().split('T')[0];
         if (dateToInput) dateToInput.value = end.toISOString().split('T')[0];
 
-        // Recupera tutte le passeggiate per le statistiche generali
-        const { data: walks, error } = await window.supabaseClient
+        // 1. Recupera sessioni concluse (REALE)
+        const { data: sessions, error: sessErr } = await window.supabaseClient
+            .from('walk_sessions')
+            .select('*, profiles(full_name), walks(start_time, end_time, notes)')
+            .eq('is_active', false)
+            .not('ended_at', 'is', null)
+            .order('started_at', { ascending: false });
+
+        if (sessions) {
+            allSessions = sessions;
+        }
+
+        // 2. Recupera prenotazioni (PROGRAMMA)
+        const { data: walks } = await window.supabaseClient
             .from('walks')
             .select('*, profiles(full_name)')
             .order('walk_date', { ascending: false }, 'start_time', { ascending: false });
 
         if (walks) {
             allWalks = walks;
-
-            // Recupera sessioni attive
-            const { data: sessions } = await window.supabaseClient
-                .from('walk_sessions')
-                .select('*, profiles(full_name)')
-                .eq('is_active', true);
-
-            activeSessions = sessions || [];
-
-            // Recupera sessioni con tracking (concluse o attive con dati)
-            const { data: trackSess } = await window.supabaseClient
-                .from('walk_sessions')
-                .select('*, profiles(full_name), walks(notes)')
-                .or('tracking_enabled.eq.true,distance_meters.gt.0,start_lat.not.is.null')
-                .order('started_at', { ascending: false });
-
-            trackedSessions = trackSess || [];
-
-            applyFiltersAndRender();
         }
+
+        // 3. Recupera sessioni attive
+        const { data: activeSess } = await window.supabaseClient
+            .from('walk_sessions')
+            .select('*, profiles(full_name)')
+            .eq('is_active', true);
+
+        activeSessions = activeSess || [];
+
+        // 4. Recupera sessioni con tracking
+        const { data: trackSess } = await window.supabaseClient
+            .from('walk_sessions')
+            .select('*, profiles(full_name), walks(notes)')
+            .or('tracking_enabled.eq.true,distance_meters.gt.0,start_lat.not.is.null')
+            .order('started_at', { ascending: false });
+
+        trackedSessions = trackSess || [];
+
+        applyFiltersAndRender();
     }
 
     function addMessage(role, text) {
@@ -119,9 +131,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (generateReportBtn) generateReportBtn.disabled = true;
 
         try {
-            const filtered = getFilteredData();
+            const filteredSessions = getFilteredData();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayWalks = allWalks.filter(w => w.walk_date === todayStr);
+
             const dateRangeText = `Sto considerando solo il periodo dal ${dateFromInput.value} al ${dateToInput.value}.`;
-            const dataContext = { walks: filtered, activeSessions: activeSessions, dateRange: dateRangeText };
+            const dataContext = {
+                sessions: filteredSessions,
+                plannedWalks: todayWalks,
+                activeSessions: activeSessions,
+                dateRange: dateRangeText
+            };
             const answer = await window.aiService.askAI(question, dataContext, chatHistory);
             addMessage('ai', (chatHistory.length <= 2 ? dateRangeText + "\n\n" : "") + answer);
         } catch (error) {
@@ -141,9 +161,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         sendChatBtn.disabled = true;
 
         try {
-            const filtered = getFilteredData();
+            const filteredSessions = getFilteredData();
             const dateRangeText = `Report basato sul periodo ${dateFromInput.value} - ${dateToInput.value}.`;
-            const dataContext = { walks: filtered, activeSessions: activeSessions, dateRange: dateRangeText };
+            const dataContext = {
+                sessions: filteredSessions,
+                activeSessions: activeSessions,
+                dateRange: dateRangeText
+            };
             const report = await window.aiService.generateAIReport(dataContext);
             addMessage('ai', dateRangeText + "\n\n" + report);
         } catch (error) {
@@ -156,18 +180,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getFilteredData() {
-        let filtered = allWalks;
+        let filtered = allSessions;
 
         if (dateFromInput && dateFromInput.value) {
-            filtered = filtered.filter(w => w.walk_date >= dateFromInput.value);
+            filtered = filtered.filter(s => s.started_at.split('T')[0] >= dateFromInput.value);
         }
         if (dateToInput && dateToInput.value) {
-            filtered = filtered.filter(w => w.walk_date <= dateToInput.value);
+            filtered = filtered.filter(s => s.started_at.split('T')[0] <= dateToInput.value);
         }
 
         if (currentFascia !== 'all') {
-            filtered = filtered.filter(w => {
-                const hour = parseInt(w.start_time.split(':')[0]);
+            filtered = filtered.filter(s => {
+                const hour = new Date(s.started_at).getHours();
                 if (currentFascia === 'morning') return hour < 12;
                 if (currentFascia === 'afternoon') return hour >= 12 && hour < 18;
                 if (currentFascia === 'evening') return hour >= 18;
@@ -200,31 +224,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         return diff;
     }
 
-    function updateMetrics(walks) {
+    function calculateRealDuration(s) {
+        if (s.duration_minutes) return s.duration_minutes;
+        if (s.started_at && s.ended_at) {
+            const diff = (new Date(s.ended_at) - new Date(s.started_at)) / 60000;
+            return Math.max(0, Math.round(diff));
+        }
+        return 0;
+    }
+
+    function updateMetrics(sessions) {
         let totalMinutes = 0;
         let maxMin = 0;
-        let longestWalk = null;
+        let longestSess = null;
         const caregiverCounts = {};
 
-        walks.forEach(w => {
-            const duration = calculateDuration(w.start_time, w.end_time);
+        sessions.forEach(s => {
+            const duration = calculateRealDuration(s);
             totalMinutes += duration;
             if (duration > maxMin) {
                 maxMin = duration;
-                longestWalk = w;
+                longestSess = s;
             }
-            const name = w.profiles?.full_name || 'Utente';
+            const name = s.profiles?.full_name || 'Utente';
             caregiverCounts[name] = (caregiverCounts[name] || 0) + 1;
         });
 
         if (totalHoursEl) totalHoursEl.textContent = Math.round(totalMinutes / 60);
-        if (trendingSpan) trendingSpan.textContent = "Basato su dati reali";
+        if (trendingSpan) trendingSpan.textContent = "Basato su dati reali (Timbrature)";
 
         if (longestWalkEl) {
             longestWalkEl.textContent = `${Math.floor(maxMin / 60)}h ${Math.round(maxMin % 60)}m`;
         }
-        if (longestWalkMeta && longestWalk) {
-            longestWalkMeta.textContent = `Registrata da ${longestWalk.profiles?.full_name || 'Utente'} il ${new Date(longestWalk.walk_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}`;
+        if (longestWalkMeta && longestSess) {
+            longestWalkMeta.textContent = `Registrata da ${longestSess.profiles?.full_name || 'Utente'} il ${new Date(longestSess.started_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}`;
         }
 
         const sortedCaregivers = Object.entries(caregiverCounts).sort((a, b) => b[1] - a[1]);
@@ -291,43 +324,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function renderRecentTable(walks) {
+    function renderRecentTable(sessions) {
         if (!recentActivitiesContainer) return;
         recentActivitiesContainer.innerHTML = '';
 
-        if (walks.length === 0) {
-            recentActivitiesContainer.innerHTML = '<p class="text-center text-on-surface-variant py-md">Nessuna attività nel periodo selezionato.</p>';
+        if (sessions.length === 0) {
+            recentActivitiesContainer.innerHTML = '<p class="text-center text-on-surface-variant py-md">Nessuna timbratura nel periodo selezionato.</p>';
             return;
         }
 
-        const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-
-        walks.forEach(w => {
-            const duration = calculateDuration(w.start_time, w.end_time);
-            const hour = parseInt(w.start_time.split(':')[0]);
+        sessions.forEach(s => {
+            const start = new Date(s.started_at);
+            const end = new Date(s.ended_at);
+            const duration = s.duration_minutes || 0;
+            const hour = start.getHours();
             let fascia = 'Mattina';
             if (hour >= 12 && hour < 18) fascia = 'Pomeriggio';
             if (hour >= 18) fascia = 'Sera';
-
-            // Calcolo Stato
-            let status = 'Programmata';
-            const startMins = parseInt(w.start_time.split(':')[0]) * 60 + parseInt(w.start_time.split(':')[1]);
-            const endMins = parseInt(w.end_time.split(':')[0]) * 60 + parseInt(w.end_time.split(':')[1]);
-
-            if (w.walk_date < todayStr) {
-                status = 'Completata';
-            } else if (w.walk_date === todayStr) {
-                if (currentTime > endMins) status = 'Completata';
-                else if (currentTime >= startMins) status = 'In corso';
-            }
-
-            const statusColors = {
-                'Completata': 'bg-green-100 text-green-700',
-                'In corso': 'bg-blue-100 text-blue-700 animate-pulse',
-                'Programmata': 'bg-surface-container-high text-on-surface-variant'
-            };
 
             const card = document.createElement('div');
             card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant hover:border-primary/30 transition-all group';
@@ -335,18 +348,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-md">
                     <div class="flex items-center gap-sm">
                         <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold shadow-sm">
-                            ${(w.profiles?.full_name || 'U').substring(0, 2).toUpperCase()}
+                            ${(s.profiles?.full_name || 'U').substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                            <p class="font-headline-md text-sm md:text-base text-primary">${w.profiles?.full_name || 'Utente'}</p>
-                            <p class="text-on-surface-variant text-xs">${new Date(w.walk_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="font-headline-md text-sm md:text-base text-primary">${s.profiles?.full_name || 'Utente'}</p>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">Timbrata</span>
+                            </div>
+                            <p class="text-on-surface-variant text-xs">${start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 sm:flex sm:items-center gap-md md:gap-lg">
                         <div class="flex flex-col">
-                            <span class="text-[10px] uppercase text-secondary font-label-sm">Orario</span>
-                            <span class="font-body-md text-sm">${w.start_time} - ${w.end_time}</span>
+                            <span class="text-[10px] uppercase text-secondary font-label-sm">Orario Reale</span>
+                            <span class="font-body-md text-sm">${start.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</span>
                         </div>
                         <div class="flex flex-col">
                             <span class="text-[10px] uppercase text-secondary font-label-sm">Durata</span>
@@ -357,22 +373,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span class="font-body-md text-sm">${fascia}</span>
                         </div>
                         <div class="flex flex-col items-start sm:items-end">
-                            <span class="px-sm py-xs rounded-full text-[10px] font-bold ${statusColors[status]}">${status}</span>
+                            ${s.walk_id ? `
+                                <span class="text-[10px] text-on-surface-variant font-label-sm">Programmata:</span>
+                                <span class="text-[11px] font-bold text-secondary">${s.walks?.start_time?.substring(0,5) || '--'} - ${s.walks?.end_time?.substring(0,5) || '--'}</span>
+                            ` : `
+                                <span class="text-[10px] text-outline italic">Passeggiata libera</span>
+                            `}
                         </div>
                     </div>
                 </div>
-                ${w.notes ? `<div class="mt-md pt-md border-t border-outline-variant/30 text-sm text-on-surface-variant italic">"${w.notes}"</div>` : ''}
+                ${s.notes || s.walks?.notes ? `<div class="mt-md pt-md border-t border-outline-variant/30 text-sm text-on-surface-variant italic">"${s.notes || s.walks?.notes}"</div>` : ''}
             `;
             recentActivitiesContainer.appendChild(card);
         });
     }
 
-    function renderTeamRanking(walks) {
+    function renderTeamRanking(sessions) {
         if (!teamRankingList) return;
         const ranking = {};
-        walks.forEach(w => {
-            const name = w.profiles?.full_name || 'Anonimo';
-            ranking[name] = (ranking[name] || 0) + calculateDuration(w.start_time, w.end_time) / 60;
+        sessions.forEach(s => {
+            const name = s.profiles?.full_name || 'Anonimo';
+            ranking[name] = (ranking[name] || 0) + calculateRealDuration(s) / 60;
         });
 
         const sorted = Object.entries(ranking).sort((a, b) => b[1] - a[1]);
@@ -391,7 +412,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `).join('');
     }
 
-    function setupRankingModal(walks) {
+    function setupRankingModal(sessions) {
         const buttons = document.querySelectorAll('.lg\\:col-span-1 button');
         const btn = Array.from(buttons).find(b => b.textContent.includes('Vedi Classifica Completa')) || buttons[0];
         if (!btn) return;
@@ -423,10 +444,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const renderModalList = () => {
                 const criteria = criteriaSelect.value;
                 const stats = {};
-                walks.forEach(w => {
-                    const name = w.profiles?.full_name || 'Anonimo';
+                sessions.forEach(s => {
+                    const name = s.profiles?.full_name || 'Anonimo';
                     if (!stats[name]) stats[name] = { duration: 0, frequency: 0 };
-                    stats[name].duration += calculateDuration(w.start_time, w.end_time) / 60;
+                    stats[name].duration += calculateRealDuration(s) / 60;
                     stats[name].frequency += 1;
                 });
 
@@ -457,11 +478,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    function renderPopularActivities(walks) {
+    function renderPopularActivities(sessions) {
         const container = document.querySelector('.bg-surface-container-low.p-md.rounded-xl .flex.flex-wrap');
         if (!container) return;
 
-        const notes = walks.map(w => w.notes).filter(Boolean);
+        const notes = sessions.map(s => s.notes || s.walks?.notes).filter(Boolean);
         const counts = {};
         notes.forEach(n => counts[n] = (counts[n] || 0) + 1);
 
@@ -476,7 +497,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `).join('');
     }
 
-    function renderWeeklyChart(walks) {
+    function renderWeeklyChart(sessions) {
         const chartWrapper = document.querySelector('.lg\\:col-span-2 > .bg-surface-container-lowest');
         let chartContainer = document.querySelector('.h-\\[280px\\].flex.items-end');
         if (!chartWrapper || !chartContainer) return;
@@ -496,12 +517,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             { morning: 0, afternoon: 0, evening: 0 }  // Dom
         ];
 
-        walks.forEach(w => {
-            const date = new Date(w.walk_date);
+        sessions.forEach(s => {
+            const date = new Date(s.started_at);
             let dayIndex = date.getDay() - 1; // 0 (Mon) to 6 (Sun)
             if (dayIndex === -1) dayIndex = 6; // Sunday
 
-            const hour = parseInt(w.start_time.split(':')[0]);
+            const hour = date.getHours();
             if (hour < 12) {
                 weeklyData[dayIndex].morning++;
             } else if (hour < 18) {
