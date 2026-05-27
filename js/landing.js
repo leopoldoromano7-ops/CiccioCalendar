@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.supabaseClient) {
             const { data: walks, error } = await window.supabaseClient
                 .from('walks')
-                .select('*')
+                .select('*, profiles(full_name)')
                 .gte('walk_date', start.toISOString().split('T')[0])
                 .lte('walk_date', end.toISOString().split('T')[0]);
 
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 walksHtml = dayWalks.map(w => `
                     <div class="mt-xs relative bg-surface-container-high p-xs rounded pl-md overflow-hidden">
                         <div class="shift-accent bg-primary"></div>
-                        <p class="text-[12px] font-bold leading-tight">${w.start_time}</p>
+                        <p class="text-[12px] font-bold leading-tight">${window.CiccioUtils.formatCardLabel(w.start_time, w.profiles?.full_name)}</p>
                     </div>
                 `).join('');
             }
@@ -146,7 +146,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             let walksHtml = dayWalks.map(w => `
                 <div class="mt-sm relative bg-surface-container-high p-2 md:p-sm rounded pl-4 md:pl-md overflow-hidden shadow-sm">
                     <div class="shift-accent bg-primary"></div>
-                    <p class="text-sm md:text-base font-bold">${w.start_time} ${w.end_time ? '- ' + w.end_time : ''}</p>
+                    <p class="text-sm md:text-base font-bold">${window.CiccioUtils.formatCardLabel(w.start_time, w.profiles?.full_name)}</p>
+                    <p class="text-xs text-on-surface-variant italic leading-none mb-1">${w.start_time.substring(0,5)} - ${w.end_time?.substring(0,5)}</p>
                     ${w.notes ? `<p class="text-xs text-on-surface-variant truncate">${w.notes}</p>` : ''}
                 </div>
             `).join('');
@@ -197,8 +198,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span class="material-symbols-outlined">pets</span>
                         </div>
                         <div>
-                            <p class="font-headline-md text-primary">${w.notes || 'Passeggiata'}</p>
-                            <p class="text-body-md text-on-surface-variant">${w.start_time} - ${w.end_time || '--'}</p>
+                            <p class="font-headline-md text-primary">${w.notes || 'Passeggiata'} · ${w.profiles?.full_name}</p>
+                            <p class="text-body-md text-on-surface-variant">${w.start_time.substring(0,5)} - ${w.end_time?.substring(0,5) || '--:--'}</p>
                         </div>
                     </div>
                     <button onclick="window.location.href='crud.html?date=${dateStr}'" class="bg-primary text-on-primary px-md py-sm rounded-lg">Dettagli</button>
