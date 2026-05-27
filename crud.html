@@ -228,16 +228,17 @@
 </main>
 <div id="footer-container"></div>
 <!-- Shift Modal Overlay (Hidden by Default) -->
-<div class="fixed inset-0 z-[100] hidden flex items-center justify-center p-margin-mobile" id="shiftModal">
+<div class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 sm:p-margin-mobile" id="shiftModal">
 <div class="absolute inset-0 bg-primary/20 backdrop-blur-sm" onclick="closeModal()"></div>
-<div class="relative bg-surface-container-lowest w-full max-w-lg rounded-xl shadow-2xl p-xl border border-outline-variant transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
-<div class="flex justify-between items-center mb-md">
+<div class="relative bg-surface-container-lowest w-full max-w-lg max-h-[90dvh] rounded-xl shadow-2xl flex flex-col border border-outline-variant transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+<div class="sticky top-0 bg-surface-container-lowest p-md md:p-xl border-b border-outline-variant/30 flex justify-between items-center z-10">
 <h2 class="font-headline-lg text-headline-lg text-on-surface">Nuova Attività</h2>
 <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors" onclick="closeModal()">
 <span class="material-symbols-outlined">close</span>
 </button>
 </div>
-<form class="space-y-md">
+<div class="overflow-y-auto p-md md:p-xl custom-scrollbar flex-grow">
+<form id="shift-modal-form" class="space-y-md">
 <div class="grid grid-cols-2 gap-md">
 <div class="flex flex-col gap-xs">
 <label class="font-label-md text-label-md text-on-surface-variant">Ora Inizio</label>
@@ -274,11 +275,12 @@
     </div>
 </div>
 
-<div class="pt-md flex flex-col gap-sm">
-<button class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md text-label-md active:scale-[0.98] transition-all" type="submit">Salva Attività</button>
+</form>
+</div>
+<div class="sticky bottom-0 bg-surface-container-lowest p-md md:p-xl border-t border-outline-variant/30 flex flex-col gap-sm z-10">
+<button form="shift-modal-form" class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md text-label-md active:scale-[0.98] transition-all" type="submit">Salva Attività</button>
 <button class="w-full bg-transparent text-on-surface-variant py-sm rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors" onclick="closeModal()" type="button">Annulla</button>
 </div>
-</form>
 </div>
 </div>
 <script>
