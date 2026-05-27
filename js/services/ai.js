@@ -13,55 +13,59 @@ const aiService = {
      */
     getSmartLocalAnswer(question, data) {
         const q = question.toLowerCase();
-        const walks = data.walks || [];
+        const plannedWalks = data.plannedWalks || [];
+        const realSessions = data.sessions || [];
         const activeSessions = data.activeSessions || [];
 
-        // 1. Chi scende di più / Più passeggiate
+        // Helper per la durata reale
+        const getDur = (s) => {
+            if (s.duration_minutes) return s.duration_minutes;
+            if (s.started_at && s.ended_at) return Math.round((new Date(s.ended_at) - new Date(s.started_at)) / 60000);
+            return 0;
+        };
+
+        // 1. Chi scende di più / Più passeggiate (REAL DATA)
         if (q.includes('chi scende di più') || q.includes('più passeggiate') || q.includes('più uscite')) {
             const counts = {};
-            walks.forEach(w => {
-                const name = w.profiles?.full_name || 'Utente';
+            realSessions.forEach(s => {
+                const name = s.profiles?.full_name || 'Utente';
                 counts[name] = (counts[name] || 0) + 1;
             });
             const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-            if (sorted.length === 0) return "Non ci sono ancora dati sulle passeggiate.";
-            return `${sorted[0][0]} è chi scende di più Ciccio con ${sorted[0][1]} passeggiate registrate negli ultimi 60 giorni.`;
+            if (sorted.length === 0) return "Non ci sono ancora dati sulle passeggiate reali.";
+            return `${sorted[0][0]} è chi scende di più Ciccio con ${sorted[0][1]} passeggiate reali registrate nel periodo selezionato.`;
         }
 
-        // 2. Chi passa più tempo
+        // 2. Chi passa più tempo (REAL DATA)
         if (q.includes('più tempo') || q.includes('chi passa più tempo')) {
             const durations = {};
-            walks.forEach(w => {
-                const name = w.profiles?.full_name || 'Utente';
-                const duration = this.calculateMinutes(w.start_time, w.end_time);
-                durations[name] = (durations[name] || 0) + duration;
+            realSessions.forEach(s => {
+                const name = s.profiles?.full_name || 'Utente';
+                durations[name] = (durations[name] || 0) + getDur(s);
             });
             const sorted = Object.entries(durations).sort((a, b) => b[1] - a[1]);
-            if (sorted.length === 0) return "Non ci sono ancora dati sulla durata delle passeggiate.";
+            if (sorted.length === 0) return "Non ci sono ancora dati sulla durata delle passeggiate reali.";
             const hours = Math.floor(sorted[0][1] / 60);
             const minutes = Math.round(sorted[0][1] % 60);
-            return `${sorted[0][0]} è chi passa più tempo con Ciccio: un totale di ${hours}h e ${minutes}m.`;
+            return `${sorted[0][0]} è chi passa più tempo con Ciccio: un totale di ${hours}h e ${minutes}m (tempo reale).`;
         }
 
-        // 3. Fascia oraria più usata
+        // 3. Fascia oraria più usata (REAL DATA)
         if (q.includes('fascia oraria') || q.includes('orario più usato') || q.includes('fascia più usata')) {
             const fasce = { mattina: 0, pomeriggio: 0, sera: 0 };
-            walks.forEach(w => {
-                const hour = parseInt(w.start_time.split(':')[0]);
+            realSessions.forEach(s => {
+                const hour = new Date(s.started_at).getHours();
                 if (hour < 12) fasce.mattina++;
                 else if (hour < 18) fasce.pomeriggio++;
                 else fasce.sera++;
             });
             const sorted = Object.entries(fasce).sort((a, b) => b[1] - a[1]);
-            return `La fascia oraria più usata per le passeggiate di Ciccio è quella della ${sorted[0][0]} (${sorted[0][1]} volte).`;
+            return `La fascia oraria reale più usata per le passeggiate di Ciccio è quella della ${sorted[0][0]} (${sorted[0][1]} volte).`;
         }
 
         // 4. Chi è in servizio oggi / Chi c'è oggi
         if (q.includes('servizio oggi') || q.includes('chi c\'è oggi') || q.includes('chi è in servizio')) {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const todayWalks = walks.filter(w => w.walk_date === todayStr);
-            const plannedNames = [...new Set(todayWalks.map(w => w.profiles?.full_name))].filter(Boolean);
-
+            const plannedNames = [...new Set(plannedWalks.map(w => w.profiles?.full_name))].filter(Boolean);
             const activeNames = activeSessions.map(s => s.profiles?.full_name).filter(Boolean);
 
             let resp = "";
@@ -97,7 +101,7 @@ const aiService = {
      * Costruisce il contesto JSON da inviare all'AI con raggruppamenti temporali.
      */
     buildAIContext(data) {
-        const walks = data.walks || [];
+        const sessions = data.sessions || [];
         const now = new Date();
         const startOfThisWeek = new Date(now);
         startOfThisWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
@@ -112,35 +116,39 @@ const aiService = {
             caregivers: {}
         };
 
-        walks.forEach(w => {
-            const walkDate = new Date(w.walk_date);
-            const duration = this.calculateMinutes(w.start_time, w.end_time) / 60;
-            const name = w.profiles?.full_name || 'Utente';
+        sessions.forEach(s => {
+            const sessDate = new Date(s.started_at);
+            let durationMin = s.duration_minutes;
+            if (!durationMin && s.ended_at) {
+                durationMin = Math.round((new Date(s.ended_at) - new Date(s.started_at)) / 60000);
+            }
+            const duration = (durationMin || 0) / 60;
+            const name = s.profiles?.full_name || 'Utente';
 
             if (!stats.caregivers[name]) stats.caregivers[name] = { count: 0, hours: 0 };
             stats.caregivers[name].count++;
             stats.caregivers[name].hours += duration;
 
-            if (walkDate >= startOfThisWeek) {
+            if (sessDate >= startOfThisWeek) {
                 stats.currentWeek.count++;
                 stats.currentWeek.hours += duration;
-            } else if (walkDate >= startOfLastWeek && walkDate < startOfThisWeek) {
+            } else if (sessDate >= startOfLastWeek && sessDate < startOfThisWeek) {
                 stats.lastWeek.count++;
                 stats.lastWeek.hours += duration;
             }
         });
 
         return {
-            totale_periodo_60_giorni: walks.length,
-            confronto_settimanale: {
+            totale_uscite_reali_periodo: sessions.length,
+            confronto_settimanale_reale: {
                 questa_settimana: { uscite: stats.currentWeek.count, ore: stats.currentWeek.hours.toFixed(1) },
                 settimana_scorsa: { uscite: stats.lastWeek.count, ore: stats.lastWeek.hours.toFixed(1) }
             },
-            classifica_accompagnatori: Object.entries(stats.caregivers).map(([nome, s]) => ({
+            classifica_accompagnatori_reale: Object.entries(stats.caregivers).map(([nome, s]) => ({
                 nome, uscite: s.count, ore: s.hours.toFixed(1)
             })).sort((a,b) => b.uscite - a.uscite),
-            ultime_5_passeggiate: walks.slice(0, 5).map(w => ({
-                data: w.walk_date, chi: w.profiles?.full_name, note: w.notes
+            ultime_5_timbrature: sessions.slice(0, 5).map(s => ({
+                data: s.started_at.split('T')[0], chi: s.profiles?.full_name, note: s.notes || s.walks?.notes || "Libera"
             }))
         };
     },

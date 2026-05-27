@@ -34,6 +34,7 @@ CREATE TABLE walk_sessions (
   end_lng DOUBLE PRECISION,
   distance_meters DOUBLE PRECISION,
   tracking_enabled BOOLEAN DEFAULT FALSE,
+  notes TEXT,
   created_by UUID REFERENCES profiles(id) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );

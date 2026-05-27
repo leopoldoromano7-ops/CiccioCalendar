@@ -186,20 +186,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             if (window.showToast) window.showToast('Passeggiata terminata');
 
-            // Se non c'era una prenotazione collegata, ne creiamo una "storica" per le statistiche
-            if (!activeSession.walk_id) {
-                const { error: walkError } = await window.supabaseClient
-                    .from('walks')
-                    .insert([{
-                        walk_date: endTime.toISOString().split('T')[0],
-                        assigned_user_id: user.id,
-                        start_time: startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false }),
-                        end_time: endTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false }),
-                        notes: 'Sessione registrata via timbratura'
-                    }]);
-                if (walkError) console.error('Errore salvataggio passeggiata:', walkError);
-            }
-
             activeSession = null;
             uiStopWalk();
             loadHistory();
@@ -208,14 +194,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadHistory() {
         const { data, error } = await window.supabaseClient
-            .from('walks')
-            .select('*, profiles(full_name)')
-            .order('walk_date', { ascending: false }, 'start_time', { ascending: false })
+            .from('walk_sessions')
+            .select('*, profiles(full_name), walks(start_time, end_time, notes)')
+            .eq('is_active', false)
+            .order('started_at', { ascending: false })
             .limit(5);
 
         if (data) {
             historyList.innerHTML = '';
-            data.forEach(walk => {
+            data.forEach(session => {
+                const start = new Date(session.started_at);
+                const end = session.ended_at ? new Date(session.ended_at) : null;
+                const dateStr = start.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
+                const timeStr = `${start.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })} - ${end ? end.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '??'}`;
+
                 const item = document.createElement('div');
                 item.className = 'flex items-center justify-between p-md bg-white rounded-xl border border-outline-variant/50 hover:border-secondary transition-colors group';
                 item.innerHTML = `
@@ -224,12 +216,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span class="material-symbols-outlined">history</span>
                         </div>
                         <div>
-                            <p class="font-label-md text-label-md text-primary">Passeggiata</p>
-                            <p class="text-xs text-secondary">${walk.walk_date} - ${walk.start_time} to ${walk.end_time}</p>
+                            <p class="font-label-md text-label-md text-primary">Passeggiata ${session.is_manual ? '(Manuale)' : ''}</p>
+                            <p class="text-xs text-secondary">${dateStr} · ${timeStr}</p>
+                            <p class="text-[10px] text-outline italic">${session.notes || session.walks?.notes || (session.walk_id ? 'Prenotata' : 'Passeggiata libera')}</p>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="font-label-md text-label-md text-primary">${walk.profiles?.full_name || 'Utente'}</p>
+                        <p class="font-label-md text-label-md text-primary">${session.profiles?.full_name || 'Utente'}</p>
+                        <p class="text-[10px] font-bold text-secondary">${session.duration_minutes || 0} min</p>
                     </div>
                 `;
                 historyList.appendChild(item);
@@ -340,7 +334,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             is_manual: true,
             source: 'manual',
             created_by: user.id,
-            walk_id: linkedId || null
+            walk_id: linkedId || null,
+            notes: notes || null
         }]);
 
         if (error) {
@@ -348,16 +343,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             else alert('Errore: ' + error.message);
         } else {
             if (window.showToast) window.showToast('Passeggiata inserita manualmente');
-            // Also ensure it appears in walks if no link existed
-            if (!linkedId) {
-                await window.supabaseClient.from('walks').insert([{
-                    walk_date: date,
-                    start_time: start,
-                    end_time: end,
-                    assigned_user_id: user.id,
-                    notes: notes || 'Inserimento manuale'
-                }]);
-            }
             window.closeManualModal();
             loadHistory();
         }
