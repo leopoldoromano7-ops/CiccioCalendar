@@ -34,11 +34,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     let refreshInterval = null;
 
     // Helper: Show Error using Empty State
-    function showCriticalError(message) {
+    function showCriticalError(message, type = 'error') {
         console.error('Map Critical Error:', message);
         emptyMessage.textContent = message;
         const icon = emptyState.querySelector('.material-symbols-outlined');
-        if (icon) icon.textContent = 'error';
+        if (icon) icon.textContent = type;
         emptyState.classList.remove('hidden');
     }
 
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Check Leaflet
             if (typeof L === 'undefined') {
-                showCriticalError("Mappa non disponibile. Riprova più tardi.");
+                showCriticalError("Libreria Leaflet non disponibile.");
                 return;
             }
 
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (sessionErr) {
                 console.error('Supabase Session Error:', sessionErr);
-                showCriticalError("Errore nel caricamento del percorso.");
+                showCriticalError("Errore Supabase: Impossibile caricare i dati della sessione.");
                 return;
             }
 
@@ -221,7 +221,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (mode !== 'live' || currentSession.ended_at) {
                 endCoordsEl.textContent = `Lat ${lastLoc.latitude.toFixed(4)}, Lng ${lastLoc.longitude.toFixed(4)}`;
             } else {
-                endCoordsEl.textContent = 'In tempo reale...';
+                const now = new Date();
+                endCoordsEl.textContent = `Ultimo agg: ${now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             }
             accuracyEl.textContent = lastLoc.accuracy ? `+/- ${Math.round(lastLoc.accuracy)}m` : 'Non disponibile';
         } else {
@@ -237,7 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (startMarker) map.removeLayer(startMarker);
         if (endMarker) map.removeLayer(endMarker);
 
-        if (locations.length > 0) {
+        if (locations.length >= 2) {
             const coords = locations.map(l => [l.latitude, l.longitude]);
             polyline = L.polyline(coords, { color: '#282625', weight: 6, opacity: 0.9, lineJoin: 'round' }).addTo(map);
 
@@ -258,39 +259,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
             emptyState.classList.add('hidden');
             updateDistance(coords);
-        } else if (currentSession && currentSession.start_lat && currentSession.start_lng) {
-            const startCoord = [currentSession.start_lat, currentSession.start_lng];
-            map.setView(startCoord, 16);
-            const startIcon = L.divIcon({
+        } else if (locations.length === 1 || (currentSession && currentSession.start_lat && currentSession.start_lng)) {
+            const lat = locations.length === 1 ? locations[0].latitude : currentSession.start_lat;
+            const lng = locations.length === 1 ? locations[0].longitude : currentSession.start_lng;
+            const coord = [lat, lng];
+
+            map.setView(coord, 16);
+            const icon = L.divIcon({
                 className: 'custom-start-marker',
-                html: `<div class="w-4 h-4 bg-secondary border-2 border-white rounded-full shadow-lg"></div>`,
-                iconSize: [16, 16], iconAnchor: [8, 8]
+                html: `<div class="w-5 h-5 bg-primary border-2 border-white rounded-full shadow-lg ${mode === 'live' ? 'animate-pulse' : ''}"></div>`,
+                iconSize: [20, 20], iconAnchor: [10, 10]
             });
-            startMarker = L.marker(startCoord, { icon: startIcon }).addTo(map).bindPopup('Posizione iniziale');
-            emptyState.classList.remove('hidden');
-            emptyMessage.textContent = 'Percorso non disponibile, solo posizione iniziale salvata.';
-            distanceEl.textContent = '0.00 km';
+            startMarker = L.marker(coord, { icon: icon }).addTo(map).bindPopup('Posizione registrata');
+
+            emptyState.classList.add('hidden');
+            updateDistance([]);
         } else {
             emptyState.classList.remove('hidden');
-            emptyMessage.textContent = 'Nessun percorso registrato per questa passeggiata.';
+            emptyMessage.textContent = 'Nessun percorso GPS registrato per questa passeggiata.';
             distanceEl.textContent = '0.00 km';
         }
     }
 
     function updateDistance(coords) {
         if (!currentSession) return;
-        if (currentSession.distance_meters > 0) {
-            distanceEl.textContent = `${(currentSession.distance_meters / 1000).toFixed(2)} km`;
-        } else if (coords.length > 1) {
-            let total = 0;
-            for (let i = 0; i < coords.length - 1; i++) {
-                total += haversineDistance(coords[i], coords[i+1]);
-            }
-            distanceEl.textContent = `${(total / 1000).toFixed(2)} km`;
-            if (mode === 'live') tryUpdateSessionDistance(total);
-        } else {
-            distanceEl.textContent = '0.00 km';
+
+        let meters = 0;
+        const noteEl = document.getElementById('distance-note') || createDistanceNote();
+
+        if (mode === 'live' && coords.length > 1 && window.CiccioUtils) {
+            meters = window.CiccioUtils.calculateDistanceMeters(coords.map(c => ({ lat: c[0], lng: c[1] })));
+            tryUpdateSessionDistance(meters);
+        } else if (currentSession.distance_meters > 0) {
+            meters = currentSession.distance_meters;
+        } else if (coords.length > 1 && window.CiccioUtils) {
+            meters = window.CiccioUtils.calculateDistanceMeters(coords.map(c => ({ lat: c[0], lng: c[1] })));
         }
+
+        distanceEl.textContent = `${(meters / 1000).toFixed(2)} km`;
+
+        if (locations.length === 1 && meters === 0) {
+            noteEl.textContent = 'Percorso troppo breve per calcolare distanza';
+            noteEl.classList.remove('hidden');
+        } else {
+            noteEl.classList.add('hidden');
+        }
+    }
+
+    function createDistanceNote() {
+        const note = document.createElement('p');
+        note.id = 'distance-note';
+        note.className = 'text-[10px] text-secondary mt-1 hidden';
+        distanceEl.parentElement.appendChild(note);
+        return note;
     }
 
     async function tryUpdateSessionDistance(meters) {
@@ -298,34 +319,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         await window.supabaseClient.from('walk_sessions').update({ distance_meters: meters }).eq('id', sessionId);
     }
 
-    function haversineDistance(coords1, coords2) {
-        const [lat1, lon1] = coords1;
-        const [lat2, lon2] = coords2;
-        const R = 6371e3;
-        const φ1 = lat1 * Math.PI/180;
-        const φ2 = lat2 * Math.PI/180;
-        const Δφ = (lat2-lat1) * Math.PI/180;
-        const Δλ = (lon2-lon1) * Math.PI/180;
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
-
     function startLiveUpdates() {
         if (refreshInterval) clearInterval(refreshInterval);
         refreshInterval = setInterval(async () => {
-            const { data: session } = await window.supabaseClient.from('walk_sessions').select('*, walks(notes)').eq('id', sessionId).single();
-            if (session) {
-                currentSession = session;
-                if (!session.is_active) {
-                    mode = 'history';
-                    clearInterval(refreshInterval);
+            try {
+                const { data: session, error: sessionErr } = await window.supabaseClient
+                    .from('walk_sessions')
+                    .select(`
+                        *,
+                        profiles (full_name),
+                        walks (*)
+                    `)
+                    .eq('id', sessionId)
+                    .single();
+
+                if (sessionErr) throw sessionErr;
+
+                if (session) {
+                    currentSession = session;
+                    if (!session.is_active) {
+                        mode = 'history';
+                        clearInterval(refreshInterval);
+                    }
                 }
+
+                const { data: locs, error: locsErr } = await window.supabaseClient
+                    .from('walk_locations')
+                    .eq('walk_session_id', sessionId)
+                    .order('recorded_at', { ascending: true });
+
+                if (locsErr) throw locsErr;
+
+                if (locs) locations = locs;
+                updateUI();
+                renderRoute();
+            } catch (err) {
+                console.warn('Live Update Error:', err);
+                // Do not show critical error to avoid interrupting the live experience
             }
-            const { data: locs } = await window.supabaseClient.from('walk_locations').eq('walk_session_id', sessionId).order('recorded_at', { ascending: true });
-            if (locs) locations = locs;
-            updateUI();
-            renderRoute();
         }, 15000);
     }
 

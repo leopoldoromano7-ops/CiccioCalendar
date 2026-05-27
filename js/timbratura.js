@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data) {
             activeSession = data;
             uiStartWalk(new Date(data.started_at));
+            if (data.tracking_enabled) {
+                startTracking(user.id, data.id);
+            }
         }
     }
 
@@ -170,13 +173,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             stopTracking();
 
+            // Fetch all locations to calculate distance and last point
+            const { data: locs } = await window.supabaseClient
+                .from('walk_locations')
+                .eq('walk_session_id', activeSession.id)
+                .order('recorded_at', { ascending: true });
+
+            let updateData = {
+                ended_at: endTime.toISOString(),
+                is_active: false,
+                duration_minutes: duration
+            };
+
+            if (locs && locs.length > 0) {
+                const lastLoc = locs[locs.length - 1];
+                updateData.end_lat = lastLoc.latitude;
+                updateData.end_lng = lastLoc.longitude;
+
+                if (locs.length >= 2 && window.CiccioUtils) {
+                    updateData.distance_meters = window.CiccioUtils.calculateDistanceMeters(locs);
+                }
+            }
+
             const { error: sessionError } = await window.supabaseClient
                 .from('walk_sessions')
-                .update({
-                    ended_at: endTime.toISOString(),
-                    is_active: false,
-                    duration_minutes: duration
-                })
+                .update(updateData)
                 .eq('id', activeSession.id);
 
             if (sessionError) {
@@ -233,8 +254,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- GEOLOCATION ARCHITECTURE ---
     let lastPosition = null;
+    let isFirstPoint = true;
+
     function startTracking(userId, sessionId) {
         if (!("geolocation" in navigator)) return;
+        // isFirstPoint is true if activeSession doesn't have start_lat yet
+        isFirstPoint = !activeSession || !activeSession.start_lat;
 
         watchId = navigator.geolocation.watchPosition(async (pos) => {
             const { latitude, longitude, accuracy } = pos.coords;
@@ -248,13 +273,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             lastPosition = { lat: latitude, lng: longitude, time: now };
 
             // Save to walk_locations
-            await window.supabaseClient.from('walk_locations').insert([{
+            const { error: locError } = await window.supabaseClient.from('walk_locations').insert([{
                 walk_session_id: sessionId,
                 user_id: userId,
                 latitude,
                 longitude,
                 accuracy
             }]);
+
+            if (!locError && isFirstPoint) {
+                // Update start coordinates for the session
+                await window.supabaseClient.from('walk_sessions').update({
+                    start_lat: latitude,
+                    start_lng: longitude
+                }).eq('id', sessionId);
+                isFirstPoint = false;
+            }
 
         }, (err) => console.warn('Geo error:', err), {
             enableHighAccuracy: true,
