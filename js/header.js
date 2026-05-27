@@ -15,6 +15,25 @@ function escapeHTML(str) {
     });
 }
 
+window.showToast = function(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-4 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-2 font-label-md ${
+        type === 'success' ? 'bg-primary text-on-primary' : 'bg-error text-on-error'
+    }`;
+    toast.innerHTML = `
+        <span class="material-symbols-outlined text-[20px]">${type === 'success' ? 'check_circle' : 'error'}</span>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.remove('translate-y-10', 'opacity-0');
+    }, 10);
+    setTimeout(() => {
+        toast.classList.add('translate-y-10', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
+
 async function renderHeader() {
     const headerContainer = document.getElementById('header-container');
     if (!headerContainer) return;

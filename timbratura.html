@@ -126,6 +126,7 @@
 <script src="js/auth.js"></script>
 <script src="js/header.js"></script>
 <script src="js/footer.js"></script>
+<script src="js/services/notifications.js"></script>
 <script src="js/timbratura.js"></script>
 <!-- TopAppBar -->
 <div id="header-container"></div>
@@ -219,6 +220,11 @@
 </div>
 <!-- Dashboard Stats for Asymmetric Layout -->
 <div class="md:col-span-1 space-y-md">
+<button id="manualEntryBtn" class="w-full flex items-center justify-center gap-sm bg-surface-container-highest text-primary border border-outline-variant p-md rounded-xl hover:bg-surface-variant transition-all group">
+    <span class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">edit_calendar</span>
+    <span class="font-label-md">Ho dimenticato di timbrare</span>
+</button>
+
 <div class="bg-secondary text-on-secondary p-md rounded-xl space-y-sm">
 <span class="material-symbols-outlined text-3xl">pets</span>
 <h4 class="font-label-md text-label-md uppercase opacity-80">Totale Oggi</h4>
@@ -235,6 +241,49 @@
 </div>
 </div>
 </main>
+
+<!-- Manual Entry Modal -->
+<div class="fixed inset-0 z-[100] hidden flex items-center justify-center p-margin-mobile" id="manualModal">
+    <div class="absolute inset-0 bg-primary/20 backdrop-blur-sm" onclick="closeManualModal()"></div>
+    <div class="relative bg-surface-container-lowest w-full max-w-lg rounded-xl shadow-2xl p-xl border border-outline-variant transform transition-all duration-300 scale-95 opacity-0" id="manualModalContent">
+        <div class="flex justify-between items-center mb-md">
+            <h2 class="font-headline-lg text-headline-lg text-on-surface">Inserimento Manuale</h2>
+            <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors" onclick="closeManualModal()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="manualEntryForm" class="space-y-md">
+            <div class="flex flex-col gap-xs">
+                <label class="font-label-md text-label-md text-on-surface-variant">Data</label>
+                <input id="manual-date" class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="date" required/>
+            </div>
+            <div class="grid grid-cols-2 gap-md">
+                <div class="flex flex-col gap-xs">
+                    <label class="font-label-md text-label-md text-on-surface-variant">Ora Inizio</label>
+                    <input id="manual-start" class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="time" required/>
+                </div>
+                <div class="flex flex-col gap-xs">
+                    <label class="font-label-md text-label-md text-on-surface-variant">Ora Fine</label>
+                    <input id="manual-end" class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="time" required/>
+                </div>
+            </div>
+            <div id="booking-link-area" class="hidden bg-secondary-container/30 p-sm rounded-lg border border-secondary/20 space-y-sm">
+                <p class="text-xs font-bold text-secondary uppercase">Prenotazione compatibile trovata</p>
+                <div id="booking-found-info" class="text-sm text-on-secondary-container"></div>
+                <input type="hidden" id="linked-booking-id">
+            </div>
+            <div class="flex flex-col gap-xs">
+                <label class="font-label-md text-label-md text-on-surface-variant">Note</label>
+                <input id="manual-notes" class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="text" placeholder="Es: Recupero uscita di ieri"/>
+            </div>
+            <div class="pt-md flex flex-col gap-sm">
+                <button class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md text-label-md active:scale-[0.98] transition-all" type="submit">Salva Passeggiata</button>
+                <button class="w-full bg-transparent text-on-surface-variant py-sm rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors" onclick="closeManualModal()" type="button">Annulla</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="footer-container"></div>
 <script disabled>
         let isClockedIn = false;
