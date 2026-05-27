@@ -17,6 +17,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterContainer = document.getElementById('crud-view-filter');
     const scrollContainer = document.querySelector('.h-\\[600px\\]');
 
+    // Helper difensivi per manipolazione DOM
+    const safeSetText = (idOrEl, val) => {
+        const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+        if (el) el.textContent = val;
+    };
+    const safeSetHTML = (idOrEl, val) => {
+        const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+        if (el) el.innerHTML = val;
+    };
+    const safeSetValue = (idOrEl, val) => {
+        const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+        if (el) el.value = val;
+    };
+    const safeSetVisible = (idOrEl, visible) => {
+        const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+        if (el) {
+            if (visible) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+    };
+    const safeToggleClass = (idOrEl, className, state) => {
+        const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+        if (el) {
+            if (state) el.classList.add(className);
+            else el.classList.remove(className);
+        }
+    };
+    const safeSetDisabled = (idOrEl, disabled) => {
+        const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+        if (el) el.disabled = disabled;
+    };
+
     // Fasce orarie definitions
     const FASCE = {
         morning: { start: '06:00', end: '11:59' },
@@ -280,24 +312,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function openModalWithTime(time) {
+    window.openModalWithTime = (time) => {
         if (!window.openModal) return;
 
         // Reset modal to "New" state
-        shiftForm.reset();
-        delete shiftForm.dataset.id;
-        const modalTitle = document.querySelector('#shiftModal h2');
-        const submitBtn = shiftForm.querySelector('button[type="submit"]');
-        const deleteBtn = document.getElementById('modal-delete-btn');
-        const detailInfo = document.getElementById('modal-detail-info');
+        if (shiftForm) {
+            shiftForm.reset();
+            delete shiftForm.dataset.id;
+            delete shiftForm.dataset.sessionId;
+        }
 
-        modalTitle.textContent = 'Nuova Attività';
-        submitBtn.textContent = 'Salva Attività';
-        submitBtn.classList.remove('hidden');
-        if (deleteBtn) deleteBtn.classList.add('hidden');
-        if (detailInfo) detailInfo.innerHTML = '';
+        // Use safe helpers and IDs
+        safeSetText('shift-modal-title', 'Nuova Attività');
+        safeSetText('modal-save-btn', 'Salva Attività');
+        safeSetVisible('modal-save-btn', true);
+        safeSetVisible('modal-delete-btn', false);
+        safeSetHTML('modal-detail-info', '');
 
-        const inputs = shiftForm.querySelectorAll('input');
+        // Remove existing source badges
+        const existingBadge = document.getElementById('modal-source-badge');
+        if (existingBadge) existingBadge.remove();
+
+        const inputs = shiftForm ? shiftForm.querySelectorAll('input') : [];
         inputs.forEach(i => i.readOnly = false);
 
         // Se time è fornito (click su slot), usa quello + 30 min
@@ -311,8 +347,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             endVal = window.CiccioUtils.addMinutesToTime(startVal, 30);
         }
 
-        inputs[0].value = startVal;
-        inputs[1].value = endVal;
+        if (inputs.length >= 2) {
+            inputs[0].value = startVal;
+            inputs[1].value = endVal;
+        }
 
         // Ensure detailInfo exists and is ready for dynamic duration
         let di = document.getElementById('modal-detail-info');
@@ -327,8 +365,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.openModal();
     }
 
-    // Export to window to be callable from HTML button
-    window.openModalWithTime = openModalWithTime;
 
     function renderStaff(walks) {
         if (!staffList) return;
@@ -396,14 +432,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reminderOptions = document.getElementById('reminder-options');
     if (reminderEnabled && reminderOptions) {
         reminderEnabled.addEventListener('change', () => {
+            safeSetVisible(reminderOptions, reminderEnabled.checked);
             if (reminderEnabled.checked) {
-                reminderOptions.classList.remove('hidden');
                 // Request notification permission if needed
                 if ("Notification" in window && Notification.permission === "default") {
                     Notification.requestPermission();
                 }
-            } else {
-                reminderOptions.classList.add('hidden');
             }
         });
     }
@@ -541,59 +575,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isOwner = currentUser && (activity.type === 'walk' ? activity.assigned_user_id === currentUser.id : activity.created_by === currentUser.id);
 
         // Reset modal state
-        shiftForm.reset();
-        if (walkId) shiftForm.dataset.id = walkId;
-        else delete shiftForm.dataset.id;
+        if (shiftForm) {
+            shiftForm.reset();
+            if (walkId) shiftForm.dataset.id = walkId;
+            else delete shiftForm.dataset.id;
 
-        if (sessionId) shiftForm.dataset.sessionId = sessionId;
-        else delete shiftForm.dataset.sessionId;
-
-        const modalTitle = document.querySelector('#shiftModal h2');
-        const submitBtn = shiftForm.querySelector('button[type="submit"]');
-        const deleteBtn = document.getElementById('modal-delete-btn');
+            if (sessionId) shiftForm.dataset.sessionId = sessionId;
+            else delete shiftForm.dataset.sessionId;
+        }
 
         // Remove existing source badges
         const existingBadge = document.getElementById('modal-source-badge');
         if (existingBadge) existingBadge.remove();
 
         if (isOwner) {
-            modalTitle.textContent = activity.type === 'session' ? 'Modifica Sessione' : 'Modifica Prenotazione';
-            submitBtn.textContent = 'Salva Modifiche';
-            submitBtn.classList.remove('hidden');
-            if (deleteBtn) {
-                deleteBtn.classList.remove('hidden');
-                deleteBtn.textContent = activity.type === 'session' ? 'Elimina Sessione' : 'Elimina Prenotazione';
-            }
+            safeSetText('shift-modal-title', activity.type === 'session' ? 'Modifica Sessione' : 'Modifica Prenotazione');
+            safeSetText('modal-save-btn', 'Salva Modifiche');
+            safeSetVisible('modal-save-btn', true);
+            safeSetVisible('modal-delete-btn', true);
+            safeSetText('modal-delete-btn', activity.type === 'session' ? 'Elimina Sessione' : 'Elimina Prenotazione');
         } else {
-            modalTitle.textContent = 'Dettaglio Attività';
-            submitBtn.classList.add('hidden');
-            if (deleteBtn) deleteBtn.classList.add('hidden');
+            safeSetText('shift-modal-title', 'Dettaglio Attività');
+            safeSetVisible('modal-save-btn', false);
+            safeSetVisible('modal-delete-btn', false);
         }
 
         // Fill data
-        const inputs = shiftForm.querySelectorAll('input');
-        inputs[0].value = activity.start_time.substring(0, 5);
-        inputs[1].value = activity.end_time?.substring(0, 5) || '';
-        inputs[2].value = activity.notes || '';
+        const inputs = shiftForm ? shiftForm.querySelectorAll('input') : [];
+        if (inputs.length >= 3) {
+            inputs[0].value = activity.start_time.substring(0, 5);
+            inputs[1].value = activity.end_time?.substring(0, 5) || '';
+            inputs[2].value = activity.notes || '';
+        }
 
         // Reminders
         if (reminderEnabled) {
             reminderEnabled.checked = activity.reminder_enabled || false;
-            if (reminderEnabled.checked) reminderOptions?.classList.remove('hidden');
-            else reminderOptions?.classList.add('hidden');
+            safeSetVisible(reminderOptions, reminderEnabled.checked);
             reminderEnabled.disabled = !isOwner || activity.type === 'session';
         }
-        const reminderMinutesEl = document.getElementById('reminder-minutes');
-        if (reminderMinutesEl) {
-            reminderMinutesEl.value = activity.reminder_minutes_before || '30';
-            reminderMinutesEl.disabled = !isOwner || activity.type === 'session';
-        }
+        safeSetValue('reminder-minutes', activity.reminder_minutes_before || '30');
+        safeSetDisabled('reminder-minutes', !isOwner || activity.type === 'session');
 
         // Read-only if not owner or if it's a concluded session
         const isConcluded = activity.type === 'session' || (activity.sessions && activity.sessions.length > 0);
-        inputs[0].readOnly = !isOwner || isConcluded;
-        inputs[1].readOnly = !isOwner || isConcluded;
-        inputs[2].readOnly = !isOwner;
+        if (inputs.length >= 3) {
+            inputs[0].readOnly = !isOwner || isConcluded;
+            inputs[1].readOnly = !isOwner || isConcluded;
+            inputs[2].readOnly = !isOwner;
+        }
 
         // Add extra info for detail view
         let detailInfo = document.getElementById('modal-detail-info');
@@ -613,6 +643,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="flex justify-between"><span class="text-on-surface-variant">Durata ${activity.type === 'walk' ? 'programmata' : 'reale'}:</span> <span>${duration} minuti</span></div>
         `;
 
+        const modalTitle = document.getElementById('shift-modal-title');
         if (activity.type === 'walk' && activity.sessions.length > 0) {
              // Show real data for walk with sessions
              activity.sessions.forEach((s, idx) => {
@@ -630,7 +661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 detailInfo.appendChild(realDataEl);
 
                 // Add source badge for the first session
-                if (idx === 0) {
+                if (idx === 0 && modalTitle) {
                     let sourceLabel = 'Timer';
                     if (s.is_manual || s.source === 'manual') sourceLabel = 'Manuale';
                     else if (s.walk_id) sourceLabel = 'Da prenotazione';
@@ -650,14 +681,14 @@ document.addEventListener('DOMContentLoaded', async () => {
              badge.id = 'modal-source-badge';
              badge.className = 'px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] rounded-full font-bold ml-2';
              badge.textContent = sourceLabel;
-             modalTitle.after(badge);
+             if (modalTitle) modalTitle.after(badge);
         } else {
              // Simple walk without sessions
              const badge = document.createElement('span');
              badge.id = 'modal-source-badge';
              badge.className = 'px-2 py-0.5 bg-surface-container-high text-on-surface-variant text-[10px] rounded-full font-bold ml-2';
              badge.textContent = 'Programmata';
-             modalTitle.after(badge);
+             if (modalTitle) modalTitle.after(badge);
         }
 
         window.openModal();
