@@ -125,6 +125,28 @@ const Utils = {
             total += this.haversineDistance(points[i], points[i + 1]);
         }
         return total;
+    },
+
+    /**
+     * Formats duration from minutes or seconds into a readable string
+     * @param {number} value The value to format
+     * @param {string} unit 'min' or 'sec'
+     */
+    formatDuration(value, unit = 'min') {
+        let totalSeconds = unit === 'min' ? Math.round(value * 60) : Math.round(value);
+        if (totalSeconds < 0) totalSeconds = 0;
+
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+
+        if (h > 0) {
+            return `${h}h ${m}m ${s}s`;
+        } else if (m > 0) {
+            return `${m}m ${s}s`;
+        } else {
+            return `${s}s`;
+        }
     }
 };
 

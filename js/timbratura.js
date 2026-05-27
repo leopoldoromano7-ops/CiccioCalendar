@@ -129,9 +129,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     clockBtn.addEventListener('click', async () => {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) {
-            alert('Devi essere loggato per timbrare.');
+            if (window.showToast) window.showToast('Devi essere loggato per timbrare.', 'error');
+            else alert('Devi essere loggato per timbrare.');
             return;
         }
+
+        // Debounce/Loading state
+        if (clockBtn.disabled) return;
+        clockBtn.disabled = true;
+        const originalLabel = clockLabel.textContent;
+        clockLabel.textContent = 'Elaborazione...';
 
         if (!activeSession) {
             // START
@@ -159,12 +166,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (error) {
                 if (window.showToast) window.showToast('Errore: ' + error.message, 'error');
                 else alert('Errore: ' + error.message);
+                clockLabel.textContent = originalLabel;
             } else {
                 activeSession = data;
                 uiStartWalk(startTime);
                 startTracking(user.id, data.id);
                 if (window.showToast) window.showToast('Passeggiata iniziata!');
             }
+            clockBtn.disabled = false;
         } else {
             // STOP
             const endTime = new Date();
@@ -203,6 +212,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (sessionError) {
                 if (window.showToast) window.showToast('Errore durante la chiusura: ' + sessionError.message, 'error');
                 else alert('Errore durante la chiusura: ' + sessionError.message);
+                clockBtn.disabled = false;
+                clockLabel.textContent = originalLabel;
                 return;
             }
             if (window.showToast) window.showToast('Passeggiata terminata');
@@ -210,6 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             activeSession = null;
             uiStopWalk();
             loadHistory();
+            clockBtn.disabled = false;
         }
     });
 
@@ -231,6 +243,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const item = document.createElement('div');
                 item.className = 'flex items-center justify-between p-md bg-white rounded-xl border border-outline-variant/50 hover:border-secondary transition-colors group';
+
+                let durationText = `${session.duration_minutes || 0} min`;
+                if (window.CiccioUtils) {
+                    if (session.started_at && session.ended_at) {
+                        const preciseMinutes = (new Date(session.ended_at) - new Date(session.started_at)) / 60000;
+                        durationText = window.CiccioUtils.formatDuration(preciseMinutes, 'min');
+                    } else {
+                        durationText = window.CiccioUtils.formatDuration(session.duration_minutes, 'min');
+                    }
+                }
+
                 item.innerHTML = `
                     <div class="flex items-center gap-md">
                         <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-secondary">
@@ -244,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <div class="text-right">
                         <p class="font-label-md text-label-md text-primary">${session.profiles?.full_name || 'Utente'}</p>
-                        <p class="text-[10px] font-bold text-secondary">${session.duration_minutes || 0} min</p>
+                        <p class="text-[10px] font-bold text-secondary">${durationText}</p>
                     </div>
                 `;
                 historyList.appendChild(item);
