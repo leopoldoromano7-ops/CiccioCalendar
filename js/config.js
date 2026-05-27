@@ -16,6 +16,10 @@ const CONFIG = {
     // L'endpoint punta al proxy serverless locale (/api/ai)
     CLOUD_AI_ENDPOINT: '/api/ai',
     CLOUD_AI_PROVIDER: 'groq',
+
+    // Configurazione Mappe
+    MAP_TILE_URL: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    MAP_ATTRIBUTION: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 };
 
 // Esporta la configurazione globalmente

@@ -55,18 +55,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (map) return;
 
+        const tileUrl = window.APP_CONFIG?.MAP_TILE_URL || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const attribution = window.APP_CONFIG?.MAP_ATTRIBUTION || '© OpenStreetMap contributors';
+
         map = L.map('map', {
             zoomControl: false,
             trackResize: true
         }).setView([41.9028, 12.4964], 13); // Default Roma
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+        L.tileLayer(tileUrl, {
+            attribution: attribution
         }).addTo(map);
 
         L.control.zoom({
             position: 'bottomright'
         }).addTo(map);
+
+        // Crucial for correct rendering in dynamic layouts/mobile
+        const resizeObserver = new ResizeObserver(() => {
+            if (map) map.invalidateSize();
+        });
+        resizeObserver.observe(document.getElementById('map'));
 
         setTimeout(() => {
             if (map) map.invalidateSize();
@@ -244,15 +253,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const startIcon = L.divIcon({
                 className: 'custom-start-marker',
-                html: `<div class="w-4 h-4 bg-secondary border-2 border-white rounded-full shadow-lg"></div>`,
-                iconSize: [16, 16], iconAnchor: [8, 8]
+                html: `<div class="w-4 h-4 bg-secondary border-2 border-white rounded-full shadow-lg flex items-center justify-center"><span class="text-[8px] text-white font-bold">PARTENZA</span></div>`,
+                iconSize: [48, 16], iconAnchor: [24, 8]
             });
-            startMarker = L.marker(coords[0], { icon: startIcon }).addTo(map).bindPopup('Partenza');
+            startMarker = L.marker(coords[0], { icon: startIcon }).addTo(map).bindPopup('Punto di partenza');
 
+            const endLabel = mode === 'live' ? 'LIVE' : 'ARRIVO';
             const endIcon = L.divIcon({
                 className: 'custom-end-marker',
-                html: `<div class="w-5 h-5 bg-primary border-2 border-white rounded-full shadow-lg ${mode === 'live' ? 'animate-pulse' : ''}"></div>`,
-                iconSize: [20, 20], iconAnchor: [10, 10]
+                html: `<div class="px-2 py-0.5 bg-primary border-2 border-white rounded-full shadow-lg flex items-center justify-center ${mode === 'live' ? 'animate-pulse' : ''}"><span class="text-[10px] text-white font-bold">${endLabel}</span></div>`,
+                iconSize: [54, 24], iconAnchor: [27, 12]
             });
             endMarker = L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(map).bindPopup(mode === 'live' ? 'Posizione attuale' : 'Arrivo');
 
@@ -267,10 +277,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             map.setView(coord, 16);
             const icon = L.divIcon({
                 className: 'custom-start-marker',
-                html: `<div class="w-5 h-5 bg-primary border-2 border-white rounded-full shadow-lg ${mode === 'live' ? 'animate-pulse' : ''}"></div>`,
-                iconSize: [20, 20], iconAnchor: [10, 10]
+                html: `<div class="px-2 py-0.5 bg-primary border-2 border-white rounded-full shadow-lg ${mode === 'live' ? 'animate-pulse' : ''}"><span class="text-[10px] text-white font-bold">ATTUALE</span></div>`,
+                iconSize: [60, 24], iconAnchor: [30, 12]
             });
-            startMarker = L.marker(coord, { icon: icon }).addTo(map).bindPopup('Posizione registrata');
+            startMarker = L.marker(coord, { icon: icon }).addTo(map).bindPopup(mode === 'live' ? 'Posizione attuale' : 'Punto registrato');
 
             emptyState.classList.add('hidden');
             updateDistance([]);
