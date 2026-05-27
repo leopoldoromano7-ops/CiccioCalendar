@@ -74,14 +74,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         activeSessions = activeSess || [];
 
-        // 4. Recupera sessioni con tracking
+        // 4. Recupera sessioni con tracking reale
         const { data: trackSess } = await window.supabaseClient
             .from('walk_sessions')
-            .select('*, profiles(full_name), walks(notes)')
-            .or('tracking_enabled.eq.true,distance_meters.gt.0,start_lat.not.is.null')
+            .select('*, profiles(full_name), walks(notes), walk_locations(id)')
             .order('started_at', { ascending: false });
 
-        trackedSessions = trackSess || [];
+        // Filter: at least one point in walk_locations OR start_lat/start_lng set
+        trackedSessions = (trackSess || []).filter(s =>
+            (s.walk_locations && s.walk_locations.length > 0) ||
+            (s.start_lat !== null && s.start_lng !== null)
+        );
 
         applyFiltersAndRender();
     }
@@ -357,7 +360,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const card = document.createElement('div');
-            card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant hover:border-primary/30 transition-all group';
+            card.className = 'bg-surface-container-low rounded-xl p-md border border-outline-variant hover:border-primary/30 transition-all group cursor-pointer';
+            card.onclick = () => window.location.href = `maps.html?session_id=${s.id}&mode=history`;
+
             card.innerHTML = `
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-md">
                     <div class="flex items-center gap-sm">

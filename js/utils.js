@@ -88,6 +88,43 @@ const Utils = {
         const time = timeStr ? timeStr.substring(0, 5) : '--:--';
         const shortName = this.shortenName(name, 5);
         return `${time} · ${shortName}`;
+    },
+
+    /**
+     * Calculates distance between two points in meters using Haversine formula
+     */
+    haversineDistance(p1, p2) {
+        const lat1 = p1.latitude || p1.lat;
+        const lon1 = p1.longitude || p1.lng;
+        const lat2 = p2.latitude || p2.lat;
+        const lon2 = p2.longitude || p2.lng;
+
+        if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return 0;
+
+        const R = 6371e3; // Earth radius in meters
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+    },
+
+    /**
+     * Calculates total distance for an array of points
+     */
+    calculateDistanceMeters(points) {
+        if (!points || points.length < 2) return 0;
+        let total = 0;
+        for (let i = 0; i < points.length - 1; i++) {
+            total += this.haversineDistance(points[i], points[i + 1]);
+        }
+        return total;
     }
 };
 
