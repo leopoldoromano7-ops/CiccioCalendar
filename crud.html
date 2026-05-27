@@ -127,6 +127,7 @@
 <script src="js/auth.js"></script>
 <script src="js/header.js"></script>
 <script src="js/footer.js"></script>
+<script src="js/services/notifications.js"></script>
 <script src="js/crud.js"></script>
 <!-- TopAppBar -->
 <div id="header-container"></div>
@@ -250,6 +251,28 @@
 <label class="font-label-md text-label-md text-on-surface-variant">Attività / Note</label>
 <input id="shift-notes" class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all" type="text" placeholder="Es: Passeggiata Parco Nord"/>
 </div>
+
+<!-- Reminder Section -->
+<div class="bg-surface-container-low p-md rounded-xl border border-outline-variant space-y-md">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-sm">
+            <span class="material-symbols-outlined text-secondary">notifications</span>
+            <label for="reminder-enabled" class="font-label-md text-label-md text-on-surface">Imposta promemoria</label>
+        </div>
+        <input type="checkbox" id="reminder-enabled" class="rounded text-primary focus:ring-primary w-5 h-5">
+    </div>
+
+    <div id="reminder-options" class="hidden flex flex-col gap-xs animate-in fade-in slide-in-from-top-1 duration-200">
+        <label class="font-label-md text-label-md text-on-surface-variant">Avvisami prima di:</label>
+        <select id="reminder-minutes" class="bg-surface-container p-sm rounded-lg border-transparent focus:border-secondary focus:ring-0 text-primary transition-all w-full">
+            <option value="10">10 minuti prima</option>
+            <option value="15">15 minuti prima</option>
+            <option value="30" selected>30 minuti prima</option>
+            <option value="60">1 ora prima</option>
+        </select>
+    </div>
+</div>
+
 <div class="pt-md flex flex-col gap-sm">
 <button class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md text-label-md active:scale-[0.98] transition-all" type="submit">Salva Attività</button>
 <button class="w-full bg-transparent text-on-surface-variant py-sm rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors" onclick="closeModal()" type="button">Annulla</button>

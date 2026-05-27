@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let activeSession = null;
     let timerInterval = null;
+    let watchId = null;
 
     // 1. Check if there is an active session
     async function fetchActiveSession() {
@@ -83,6 +84,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":");
     }
 
+    function calculateMinutes(t1, t2) {
+        const [h1, m1] = t1.split(':').map(Number);
+        const [h2, m2] = t2.split(':').map(Number);
+        return (h1 * 60 + m1) - (h2 * 60 + m2);
+    }
+
+    async function findCompatibleBooking(user, date, time) {
+        const { data: walks } = await window.supabaseClient
+            .from('walks')
+            .select('*')
+            .eq('assigned_user_id', user.id)
+            .eq('walk_date', date);
+
+        if (!walks || walks.length === 0) return null;
+
+        // Find closest within 90 minutes
+        let closest = null;
+        let minDiff = 91;
+
+        walks.forEach(w => {
+            const diff = Math.abs(calculateMinutes(time, w.start_time.substring(0, 5)));
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = w;
+            }
+        });
+
+        return closest;
+    }
+
     clockBtn.addEventListener('click', async () => {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) {
@@ -93,50 +124,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!activeSession) {
             // START
             const startTime = new Date();
+            const dateStr = startTime.toISOString().split('T')[0];
+            const timeStr = startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+            const linkedBooking = await findCompatibleBooking(user, dateStr, timeStr);
+
+            const insertData = {
+                started_at: startTime.toISOString(),
+                created_by: user.id,
+                is_active: true,
+                source: 'timer'
+            };
+            if (linkedBooking) insertData.walk_id = linkedBooking.id;
+
             const { data, error } = await window.supabaseClient
                 .from('walk_sessions')
-                .insert([{
-                    started_at: startTime.toISOString(),
-                    created_by: user.id,
-                    is_active: true
-                }])
+                .insert([insertData])
                 .select()
                 .single();
 
             if (error) {
-                alert('Errore: ' + error.message);
+                if (window.showToast) window.showToast('Errore: ' + error.message, 'error');
+                else alert('Errore: ' + error.message);
             } else {
                 activeSession = data;
                 uiStartWalk(startTime);
+                startTracking(user.id, data.id);
+                if (window.showToast) window.showToast('Passeggiata iniziata!');
             }
         } else {
             // STOP
             const endTime = new Date();
+            const startTime = new Date(activeSession.started_at);
+            const duration = Math.round((endTime - startTime) / 60000);
+
+            stopTracking();
+
             const { error: sessionError } = await window.supabaseClient
                 .from('walk_sessions')
                 .update({
                     ended_at: endTime.toISOString(),
-                    is_active: false
+                    is_active: false,
+                    duration_minutes: duration
                 })
                 .eq('id', activeSession.id);
 
             if (sessionError) {
-                alert('Errore durante la chiusura: ' + sessionError.message);
+                if (window.showToast) window.showToast('Errore durante la chiusura: ' + sessionError.message, 'error');
+                else alert('Errore durante la chiusura: ' + sessionError.message);
                 return;
             }
+            if (window.showToast) window.showToast('Passeggiata terminata');
 
-            // Create record in walks table
-            const { error: walkError } = await window.supabaseClient
-                .from('walks')
-                .insert([{
-                    walk_date: endTime.toISOString().split('T')[0],
-                    assigned_user_id: user.id,
-                    start_time: new Date(activeSession.started_at).toLocaleTimeString('it-IT', { hour12: false }),
-                    end_time: endTime.toLocaleTimeString('it-IT', { hour12: false }),
-                    notes: 'Sessione registrata via timbratura'
-                }]);
-
-            if (walkError) console.error('Errore salvataggio passeggiata:', walkError);
+            // Se non c'era una prenotazione collegata, ne creiamo una "storica" per le statistiche
+            if (!activeSession.walk_id) {
+                const { error: walkError } = await window.supabaseClient
+                    .from('walks')
+                    .insert([{
+                        walk_date: endTime.toISOString().split('T')[0],
+                        assigned_user_id: user.id,
+                        start_time: startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                        end_time: endTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                        notes: 'Sessione registrata via timbratura'
+                    }]);
+                if (walkError) console.error('Errore salvataggio passeggiata:', walkError);
+            }
 
             activeSession = null;
             uiStopWalk();
@@ -174,6 +226,132 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     }
+
+    // --- GEOLOCATION ARCHITECTURE ---
+    let lastPosition = null;
+    function startTracking(userId, sessionId) {
+        if (!("geolocation" in navigator)) return;
+
+        watchId = navigator.geolocation.watchPosition(async (pos) => {
+            const { latitude, longitude, accuracy } = pos.coords;
+
+            // Throttling logic: check distance or time
+            const now = Date.now();
+            if (lastPosition && (now - lastPosition.time < 20000)) { // 20s throttle
+                return;
+            }
+
+            lastPosition = { lat: latitude, lng: longitude, time: now };
+
+            // Save to walk_locations
+            await window.supabaseClient.from('walk_locations').insert([{
+                walk_session_id: sessionId,
+                user_id: userId,
+                latitude,
+                longitude,
+                accuracy
+            }]);
+
+        }, (err) => console.warn('Geo error:', err), {
+            enableHighAccuracy: true,
+            maximumAge: 30000,
+            timeout: 27000
+        });
+    }
+
+    function stopTracking() {
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+    }
+
+    // --- MANUAL ENTRY MODAL ---
+    const manualBtn = document.getElementById('manualEntryBtn');
+    const manualModal = document.getElementById('manualModal');
+    const manualForm = document.getElementById('manualEntryForm');
+    const manualDateInput = document.getElementById('manual-date');
+    const manualStartInput = document.getElementById('manual-start');
+    const manualEndInput = document.getElementById('manual-end');
+
+    window.openManualModal = () => {
+        manualModal.classList.remove('hidden');
+        manualDateInput.value = new Date().toISOString().split('T')[0];
+        setTimeout(() => {
+            document.getElementById('manualModalContent').classList.remove('scale-95', 'opacity-0');
+            document.getElementById('manualModalContent').classList.add('scale-100', 'opacity-100');
+        }, 10);
+    };
+
+    window.closeManualModal = () => {
+        document.getElementById('manualModalContent').classList.add('scale-95', 'opacity-0');
+        setTimeout(() => manualModal.classList.add('hidden'), 300);
+    };
+
+    manualBtn?.addEventListener('click', window.openManualModal);
+
+    // Auto-check for booking when date/time changes
+    [manualDateInput, manualStartInput].forEach(el => el?.addEventListener('change', async () => {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (!user || !manualDateInput.value || !manualStartInput.value) return;
+
+        const booking = await findCompatibleBooking(user, manualDateInput.value, manualStartInput.value);
+        const linkArea = document.getElementById('booking-link-area');
+        const linkInfo = document.getElementById('booking-found-info');
+        const linkId = document.getElementById('linked-booking-id');
+
+        if (booking) {
+            linkArea.classList.remove('hidden');
+            linkInfo.textContent = `${booking.start_time.substring(0,5)} - ${booking.notes || 'Passeggiata'}`;
+            linkId.value = booking.id;
+        } else {
+            linkArea.classList.add('hidden');
+            linkId.value = '';
+        }
+    }));
+
+    manualForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (!user) return;
+
+        const date = manualDateInput.value;
+        const start = manualStartInput.value;
+        const end = manualEndInput.value;
+        const notes = document.getElementById('manual-notes').value;
+        const linkedId = document.getElementById('linked-booking-id').value;
+
+        const startFull = new Date(`${date}T${start}`);
+        const endFull = new Date(`${date}T${end}`);
+        const duration = Math.round((endFull - startFull) / 60000);
+
+        const { error } = await window.supabaseClient.from('walk_sessions').insert([{
+            started_at: startFull.toISOString(),
+            ended_at: endFull.toISOString(),
+            duration_minutes: duration,
+            is_active: false,
+            is_manual: true,
+            source: 'manual',
+            created_by: user.id,
+            walk_id: linkedId || null
+        }]);
+
+        if (error) {
+            if (window.showToast) window.showToast('Errore: ' + error.message, 'error');
+            else alert('Errore: ' + error.message);
+        } else {
+            if (window.showToast) window.showToast('Passeggiata inserita manualmente');
+            // Also ensure it appears in walks if no link existed
+            if (!linkedId) {
+                await window.supabaseClient.from('walks').insert([{
+                    walk_date: date,
+                    start_time: start,
+                    end_time: end,
+                    assigned_user_id: user.id,
+                    notes: notes || 'Inserimento manuale'
+                }]);
+            }
+            window.closeManualModal();
+            loadHistory();
+        }
+    });
 
     fetchActiveSession();
     loadHistory();
