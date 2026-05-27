@@ -231,12 +231,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function calculateRealDuration(s) {
-        if (s.duration_minutes) return s.duration_minutes;
         if (s.started_at && s.ended_at) {
             const diff = (new Date(s.ended_at) - new Date(s.started_at)) / 60000;
-            return Math.max(0, Math.round(diff));
+            return Math.max(0, diff);
         }
-        return 0;
+        return s.duration_minutes || 0;
     }
 
     function updateMetrics(sessions) {
@@ -260,7 +259,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (trendingSpan) trendingSpan.textContent = "Basato su dati reali (Timbrature)";
 
         if (longestWalkEl) {
-            longestWalkEl.textContent = `${Math.floor(maxMin / 60)}h ${Math.round(maxMin % 60)}m`;
+            longestWalkEl.textContent = window.CiccioUtils ?
+                window.CiccioUtils.formatDuration(maxMin, 'min') :
+                `${Math.floor(maxMin / 60)}h ${Math.round(maxMin % 60)}m`;
         }
         if (longestWalkMeta && longestSess) {
             longestWalkMeta.textContent = `Registrata da ${longestSess.profiles?.full_name || 'Utente'} il ${new Date(longestSess.started_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}`;
@@ -385,7 +386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                         <div class="flex flex-col">
                             <span class="text-[10px] uppercase text-secondary font-label-sm">Durata</span>
-                            <span class="font-body-md text-sm">${duration} min</span>
+                            <span class="font-body-md text-sm">${window.CiccioUtils ? window.CiccioUtils.formatDuration(duration, 'min') : duration + ' min'}</span>
                         </div>
                         <div class="flex flex-col">
                             <span class="text-[10px] uppercase text-secondary font-label-sm">Fascia</span>
