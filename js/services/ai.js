@@ -86,7 +86,7 @@ const aiService = {
         // 5. Slot scoperti / liberi
         if (q.includes('slot scoperti') || q.includes('slot liberi') || q.includes('buchi')) {
             const todayStr = new Date().toISOString().split('T')[0];
-            const todayWalks = walks.filter(w => w.walk_date === todayStr).sort((a,b) => a.start_time.localeCompare(b.start_time));
+            const todayWalks = plannedWalks.filter(w => w.walk_date === todayStr).sort((a,b) => a.start_time.localeCompare(b.start_time));
 
             if (todayWalks.length === 0) return "Oggi sembra tutto scoperto! Non ci sono ancora passeggiate registrate.";
 
