@@ -16,13 +16,14 @@
             vertical-align: middle;
         }
         #map {
-            height: 55vh;
             width: 100%;
+            height: 55vh;
+            min-height: 360px;
             z-index: 10;
         }
         @media (min-width: 768px) {
             #map {
-                height: calc(100vh - 80px - 64px);
+                height: 60vh;
             }
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }

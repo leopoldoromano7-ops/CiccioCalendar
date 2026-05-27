@@ -3,14 +3,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sessionId = urlParams.get('session_id');
     let mode = urlParams.get('mode');
 
-    if (!sessionId) {
-        window.location.href = 'index.html';
-        return;
-    }
-
-    const mapEl = document.getElementById('map');
+    // UI Elements
     const loadingOverlay = document.getElementById('loading-overlay');
     const emptyState = document.getElementById('empty-state');
+    const emptyMessage = document.getElementById('empty-message');
     const modeBadge = document.getElementById('mode-badge');
     const activeStatus = document.getElementById('active-status');
     const backBtn = document.getElementById('back-btn');
@@ -37,11 +33,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     let locations = [];
     let refreshInterval = null;
 
+    // Helper: Show Error using Empty State
+    function showCriticalError(message) {
+        console.error('Map Critical Error:', message);
+        emptyMessage.textContent = message;
+        const icon = emptyState.querySelector('.material-symbols-outlined');
+        if (icon) icon.textContent = 'error';
+        emptyState.classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        loadingOverlay.classList.add('opacity-0');
+        setTimeout(() => loadingOverlay.classList.add('hidden'), 300);
+    }
+
     // Initialize Map
     function initMap() {
+        if (typeof L === 'undefined') {
+            throw new Error("Libreria Leaflet non caricata.");
+        }
+
+        if (map) return;
+
         map = L.map('map', {
-            zoomControl: false
-        }).setView([45.4642, 9.1900], 13); // Default Milano
+            zoomControl: false,
+            trackResize: true
+        }).setView([41.9028, 12.4964], 13); // Default Roma
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
@@ -50,65 +67,90 @@ document.addEventListener('DOMContentLoaded', async () => {
         L.control.zoom({
             position: 'bottomright'
         }).addTo(map);
+
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+        }, 200);
     }
 
     async function loadData() {
-        // Set back button early if mode is in URL
-        if (mode) {
-            updateBackButton();
-        }
+        try {
+            // Check session ID first
+            if (!sessionId) {
+                showCriticalError("Sessione percorso non trovata.");
+                return;
+            }
 
-        if (!window.supabaseClient) return;
+            // Check Leaflet
+            if (typeof L === 'undefined') {
+                showCriticalError("Mappa non disponibile. Riprova più tardi.");
+                return;
+            }
 
-        // 1. Fetch Session
-        const { data: session, error: sessionErr } = await window.supabaseClient
-            .from('walk_sessions')
-            .select(`
-                *,
-                profiles (full_name),
-                walks (*)
-            `)
-            .eq('id', sessionId)
-            .single();
+            // Initialize map early
+            initMap();
 
-        if (sessionErr || !session) {
-            console.error('Error fetching session:', sessionErr);
-            loadingOverlay.innerHTML = `
-                <div class="p-8 text-center">
-                    <span class="material-symbols-outlined text-4xl text-error mb-2">error</span>
-                    <p class="text-error font-bold">Errore nel caricamento della sessione.</p>
-                    <p class="text-on-surface-variant text-sm mt-2">Dato non disponibile.</p>
-                </div>
-            `;
-            return;
-        }
+            if (mode) updateBackButton();
 
-        currentSession = session;
+            if (!window.supabaseClient) {
+                showCriticalError("Connessione al database non inizializzata.");
+                return;
+            }
 
-        // 2. Determine Mode if missing
-        if (!mode) {
-            if (session.is_active) mode = 'live';
-            else mode = 'history';
-            updateBackButton();
-        }
+            // 1. Fetch Session
+            const { data: session, error: sessionErr } = await window.supabaseClient
+                .from('walk_sessions')
+                .select(`
+                    *,
+                    profiles (full_name),
+                    walks (*)
+                `)
+                .eq('id', sessionId)
+                .single();
 
-        // 3. Fetch Locations
-        const { data: locs, error: locsErr } = await window.supabaseClient
-            .from('walk_locations')
-            .eq('walk_session_id', sessionId)
-            .order('recorded_at', { ascending: true });
+            if (sessionErr) {
+                console.error('Supabase Session Error:', sessionErr);
+                showCriticalError("Errore nel caricamento del percorso.");
+                return;
+            }
 
-        locations = locs || [];
+            if (!session) {
+                showCriticalError("Sessione percorso non trovata.");
+                return;
+            }
 
-        updateUI();
-        renderRoute();
+            currentSession = session;
 
-        // Fade out loading
-        loadingOverlay.classList.add('opacity-0');
-        setTimeout(() => loadingOverlay.classList.add('hidden'), 300);
+            // 2. Determine Mode
+            if (!mode) {
+                mode = session.is_active ? 'live' : 'history';
+                updateBackButton();
+            }
 
-        if (mode === 'live' && session.is_active) {
-            startLiveUpdates();
+            // 3. Fetch Locations
+            const { data: locs, error: locsErr } = await window.supabaseClient
+                .from('walk_locations')
+                .eq('walk_session_id', sessionId)
+                .order('recorded_at', { ascending: true });
+
+            if (locsErr) {
+                console.error('Supabase Locations Error:', locsErr);
+            }
+
+            locations = locs || [];
+
+            updateUI();
+            renderRoute();
+
+            if (mode === 'live' && session.is_active) {
+                startLiveUpdates();
+            }
+
+        } catch (err) {
+            console.error('Unexpected Map Error:', err);
+            showCriticalError("Si è verificato un errore imprevisto.");
+        } finally {
+            hideLoading();
         }
     }
 
@@ -123,7 +165,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateUI() {
-        // Badge Mode
+        if (!currentSession) return;
+
         modeBadge.classList.remove('hidden');
         if (mode === 'live') {
             modeBadge.textContent = 'In corso';
@@ -136,15 +179,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         updateBackButton();
 
-        // User Info
         const name = currentSession.profiles?.full_name || 'Dato non disponibile';
         userNameEl.textContent = name;
         userAvatarEl.textContent = name !== 'Dato non disponibile' ? name.substring(0, 2).toUpperCase() : '?';
 
         const dateObj = new Date(currentSession.started_at);
         walkDateEl.textContent = dateObj.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-        // Times
         startTimeEl.textContent = dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
         if (currentSession.ended_at) {
@@ -155,7 +195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             endTimeEl.textContent = 'Non disponibile';
         }
 
-        // Duration
         if (currentSession.duration_minutes) {
             durationEl.textContent = `${currentSession.duration_minutes} min`;
         } else if (currentSession.started_at) {
@@ -167,7 +206,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             durationEl.textContent = '-- min';
         }
 
-        // Notes
         if (currentSession.walks?.notes) {
             notesContainer.classList.remove('hidden');
             notesEl.textContent = currentSession.walks.notes;
@@ -175,24 +213,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             notesContainer.classList.add('hidden');
         }
 
-        // Accuracy and Coords
         if (locations.length > 0) {
             const firstLoc = locations[0];
             const lastLoc = locations[locations.length - 1];
-
             startCoordsEl.textContent = `Lat ${firstLoc.latitude.toFixed(4)}, Lng ${firstLoc.longitude.toFixed(4)}`;
 
             if (mode !== 'live' || currentSession.ended_at) {
                 endCoordsEl.textContent = `Lat ${lastLoc.latitude.toFixed(4)}, Lng ${lastLoc.longitude.toFixed(4)}`;
             } else {
-                endCoordsEl.textContent = 'Aggiornamento in tempo reale...';
+                endCoordsEl.textContent = 'In tempo reale...';
             }
-
-            if (lastLoc.accuracy) {
-                accuracyEl.textContent = `+/- ${Math.round(lastLoc.accuracy)}m`;
-            } else {
-                accuracyEl.textContent = 'Non disponibile';
-            }
+            accuracyEl.textContent = lastLoc.accuracy ? `+/- ${Math.round(lastLoc.accuracy)}m` : 'Non disponibile';
         } else {
             startCoordsEl.textContent = 'Nessun segnale GPS';
             endCoordsEl.textContent = 'Nessun segnale GPS';
@@ -202,70 +233,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderRoute() {
         if (!map) return;
-
-        // Clear existing layers
         if (polyline) map.removeLayer(polyline);
         if (startMarker) map.removeLayer(startMarker);
         if (endMarker) map.removeLayer(endMarker);
 
         if (locations.length > 0) {
             const coords = locations.map(l => [l.latitude, l.longitude]);
+            polyline = L.polyline(coords, { color: '#282625', weight: 6, opacity: 0.9, lineJoin: 'round' }).addTo(map);
 
-            polyline = L.polyline(coords, {
-                color: '#282625', // Primary
-                weight: 6,
-                opacity: 0.9,
-                lineJoin: 'round'
-            }).addTo(map);
-
-            // Custom Start Marker
             const startIcon = L.divIcon({
                 className: 'custom-start-marker',
                 html: `<div class="w-4 h-4 bg-secondary border-2 border-white rounded-full shadow-lg"></div>`,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8]
+                iconSize: [16, 16], iconAnchor: [8, 8]
             });
             startMarker = L.marker(coords[0], { icon: startIcon }).addTo(map).bindPopup('Partenza');
 
-            // End/Current Marker
-            const lastCoord = coords[coords.length - 1];
             const endIcon = L.divIcon({
                 className: 'custom-end-marker',
                 html: `<div class="w-5 h-5 bg-primary border-2 border-white rounded-full shadow-lg ${mode === 'live' ? 'animate-pulse' : ''}"></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                iconSize: [20, 20], iconAnchor: [10, 10]
             });
-            endMarker = L.marker(lastCoord, { icon: endIcon }).addTo(map).bindPopup(mode === 'live' ? 'Posizione attuale' : 'Arrivo');
+            endMarker = L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(map).bindPopup(mode === 'live' ? 'Posizione attuale' : 'Arrivo');
 
             map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
             emptyState.classList.add('hidden');
-
-            // Distance calculation
             updateDistance(coords);
-
-        } else if (currentSession.start_lat && currentSession.start_lng) {
+        } else if (currentSession && currentSession.start_lat && currentSession.start_lng) {
             const startCoord = [currentSession.start_lat, currentSession.start_lng];
             map.setView(startCoord, 16);
-
             const startIcon = L.divIcon({
                 className: 'custom-start-marker',
                 html: `<div class="w-4 h-4 bg-secondary border-2 border-white rounded-full shadow-lg"></div>`,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8]
+                iconSize: [16, 16], iconAnchor: [8, 8]
             });
             startMarker = L.marker(startCoord, { icon: startIcon }).addTo(map).bindPopup('Posizione iniziale');
-
             emptyState.classList.remove('hidden');
-            document.getElementById('empty-message').textContent = 'Percorso non disponibile, solo posizione iniziale salvata.';
+            emptyMessage.textContent = 'Percorso non disponibile, solo posizione iniziale salvata.';
             distanceEl.textContent = '0.00 km';
         } else {
             emptyState.classList.remove('hidden');
-            document.getElementById('empty-message').textContent = 'Nessun percorso registrato per questa passeggiata.';
+            emptyMessage.textContent = 'Nessun percorso registrato per questa passeggiata.';
             distanceEl.textContent = '0.00 km';
         }
     }
 
     function updateDistance(coords) {
+        if (!currentSession) return;
         if (currentSession.distance_meters > 0) {
             distanceEl.textContent = `${(currentSession.distance_meters / 1000).toFixed(2)} km`;
         } else if (coords.length > 1) {
@@ -274,11 +287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 total += haversineDistance(coords[i], coords[i+1]);
             }
             distanceEl.textContent = `${(total / 1000).toFixed(2)} km`;
-
-            // Try updating DB if in live mode
-            if (mode === 'live') {
-                tryUpdateSessionDistance(total);
-            }
+            if (mode === 'live') tryUpdateSessionDistance(total);
         } else {
             distanceEl.textContent = '0.00 km';
         }
@@ -286,40 +295,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function tryUpdateSessionDistance(meters) {
         if (!window.supabaseClient || mode !== 'live') return;
-        await window.supabaseClient
-            .from('walk_sessions')
-            .update({ distance_meters: meters })
-            .eq('id', sessionId);
+        await window.supabaseClient.from('walk_sessions').update({ distance_meters: meters }).eq('id', sessionId);
     }
 
     function haversineDistance(coords1, coords2) {
         const [lat1, lon1] = coords1;
         const [lat2, lon2] = coords2;
-        const R = 6371e3; // metres
+        const R = 6371e3;
         const φ1 = lat1 * Math.PI/180;
         const φ2 = lat2 * Math.PI/180;
         const Δφ = (lat2-lat1) * Math.PI/180;
         const Δλ = (lon2-lon1) * Math.PI/180;
-
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
         return R * c;
     }
 
     function startLiveUpdates() {
         if (refreshInterval) clearInterval(refreshInterval);
         refreshInterval = setInterval(async () => {
-            console.log('Refreshing live data...');
-
-            const { data: session } = await window.supabaseClient
-                .from('walk_sessions')
-                .select('*, walks(notes)')
-                .eq('id', sessionId)
-                .single();
-
+            const { data: session } = await window.supabaseClient.from('walk_sessions').select('*, walks(notes)').eq('id', sessionId).single();
             if (session) {
                 currentSession = session;
                 if (!session.is_active) {
@@ -327,21 +322,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     clearInterval(refreshInterval);
                 }
             }
-
-            const { data: locs } = await window.supabaseClient
-                .from('walk_locations')
-                .eq('walk_session_id', sessionId)
-                .order('recorded_at', { ascending: true });
-
-            if (locs) {
-                locations = locs;
-            }
-
+            const { data: locs } = await window.supabaseClient.from('walk_locations').eq('walk_session_id', sessionId).order('recorded_at', { ascending: true });
+            if (locs) locations = locs;
             updateUI();
             renderRoute();
-        }, 15000); // 15 seconds
+        }, 15000);
     }
 
-    initMap();
     loadData();
 });
